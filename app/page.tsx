@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <main>
+    <main style={{ background: "#0D0D0D" }}>
       {/* Hero sticky — las secciones siguientes se superponen al hacer scroll */}
       <div style={{ position: "sticky", top: 0, zIndex: 0, height: "100vh" }}>
         <Hero />
