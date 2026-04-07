@@ -17,14 +17,14 @@ export default function Footer() {
           <div>
             <span
               className="text-2xl font-light"
-              style={{ fontFamily: "'Cormorant', Georgia, serif", color: "#1A1A1A" }}
+              style={{ fontFamily: "'Tilt Warp', sans-serif", color: "#1A1A1A" }}
             >
               M;
             </span>
             <p
               className="text-xs mt-1 max-w-[200px] leading-relaxed"
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Tilt Warp', sans-serif",
                 color: "#9A948D",
               }}
             >
@@ -47,7 +47,7 @@ export default function Footer() {
                 href={link.href}
                 className="text-sm transition-colors"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Tilt Warp', sans-serif",
                   color: "#9A948D",
                   textDecoration: "none",
                 }}
@@ -67,7 +67,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-sm transition-colors"
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Tilt Warp', sans-serif",
                 color: "#9A948D",
                 textDecoration: "none",
               }}
@@ -82,7 +82,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-sm transition-colors"
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Tilt Warp', sans-serif",
                 color: "#9A948D",
                 textDecoration: "none",
               }}
@@ -98,13 +98,13 @@ export default function Footer() {
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
           <span
             className="text-xs"
-            style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(26,26,26,0.3)" }}
+            style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(26,26,26,0.3)" }}
           >
             © {year} Marplacode. Todos los derechos reservados.
           </span>
           <span
             className="text-xs"
-            style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(26,26,26,0.3)" }}
+            style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(26,26,26,0.3)" }}
           >
             Construido con Next.js · Diseñado con criterio
           </span>

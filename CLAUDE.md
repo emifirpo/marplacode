@@ -1,99 +1,84 @@
 # Marplacode Project Guidelines
 
 ## Project Overview
-Marplacode is a modern landing page for a digital product agency. It's built with Next.js 14, React 18, and features advanced animations using GSAP, Three.js, and Splitting.js.
+Marplacode es la landing page de una agencia de productos digitales. Construida con Next.js 14, React 18, animaciones nativas (scroll + RAF) y Three.js para efectos WebGL.
 
 **Tech Stack:**
-- Next.js 14.2.5 with App Router
-- React 18 with "use client" components
-- GSAP with ScrollTrigger for scroll animations
-- Three.js with WebGL for visual effects
-- Splitting.js for text animation
-- Tailwind CSS for styling
-- TypeScript with strict mode
+- Next.js 14.2.5 con App Router
+- React 18 con componentes `"use client"`
+- Three.js (v0.183) — instalado, usado en CursorTrail
+- Tailwind CSS para estilos base
+- TypeScript con strict mode
+- Fuentes: Boldonse (h1 hero), Cormorant, DM Sans — cargadas via Google Fonts en `layout.tsx`
 
-## Key Components
+> ⚠️ GSAP y Splitting.js fueron removidos. Todas las animaciones usan scroll events nativos + `requestAnimationFrame` + DOM manipulation directa.
 
-### Animation Components
-- **AnimatedHeadline.tsx**: Hero headline with GSAP scroll animations (Demo 10 - character scatter entry, Demo 9 - 3D dispersal on exit)
-- **CursorTrail.tsx**: Interactive cursor trail effect using Three.js
-- **DitherBg.tsx**: Dither background effect component
-- **useAnimatedText.ts**: Custom hook for text animation on Intersection Observer trigger
+## Componentes
 
-### Page Sections
-- **Hero.tsx**: Hero section with sticky scroll and parallax effects
-- **Capabilities.tsx**: Horizontal gallery of capabilities (uses AnimatedHeadline)
-- **Cases.tsx**: Case studies section (animated text)
-- **Process.tsx**: Process explanation section (animated text)
-- **Differentiator.tsx**: Comparison section with competitors (animated text + unescaped quotes fix)
-- **CTA.tsx**: Call-to-action section (animated text)
-- **Filter.tsx**: Interactive filter section
-- **Navbar.tsx**: Navigation bar
-- **Footer.tsx**: Footer content
-- **ShrinkOnScroll.tsx**: Wrapper component with scroll-based shrinking effect
+### Animación
+- **CursorTrail.tsx** — Trail de cursor WebGL usando Three.js. Implementación exacta de [rock-biter/cursor-trail](https://github.com/rock-biter/cursor-trail): ping-pong render targets con `HalfFloatType`, curl noise en fragment shader, `mix-blend-mode: screen` para overlay transparente. Solo visible en el hero (scroll fade).
+- **DitherBg.tsx** — Grid de puntos Bayer dither (canvas 2D). Click genera rings. Se desvanece al scrollear.
+- **AnimatedHeadline.tsx** — Reveal word-by-word con CSS transition (opacity + translateY), stagger por índice.
 
-## Important Notes
+### Secciones
+- **Hero.tsx** — Sticky scroll. Tipografía Boldonse. Animación de entrada word-level (translateY + opacity). Exit en scroll: Demo9 scatter 3D por caracter (rotateX/Y/Z + translate3d), pre-calculado con vectores random. Sub y CTAs se desvanecen con el scroll.
+- **Capabilities.tsx** — Carrusel horizontal sticky. Header colapsa en height durante Phase 1 para centrar el gallery en 100vh. Phase 2: translateX + scale(1.35) desde origen izquierdo. Border-radius animado en el container (floating card effect). Chars de título se dispersan en 3D al scrollear.
+- **Cases.tsx** — Mini case studies con texto animado.
+- **Process.tsx** — 4 etapas con texto animado.
+- **Differentiator.tsx** — Comparación con agencias tradicionales, texto animado.
+- **CTA.tsx** — Call to action final.
+- **Filter.tsx** — Sección de filtro interactivo.
+- **Navbar.tsx** / **Footer.tsx**
 
-### Development
-- Run `npm run dev` to start the development server on http://localhost:3000
-- The project uses dynamic imports for client components to prevent SSR "document is not defined" errors
-- TypeScript strict mode is enabled - Three.js type mismatches often require `as any` casts
+## Estructura de página (`app/page.tsx`)
+```
+<main background="#0D0D0D">
+  <div sticky zIndex=0>   ← Hero queda pegado mientras las demás secciones pasan arriba
+    <Hero />
+  </div>
+  <div relative zIndex=1>
+    <Filter /> <Capabilities /> <Cases /> <Process />
+    <Differentiator /> <CTA /> <Footer />
+  </div>
+  <Navbar />   ← fuera del flow, fixed
+</main>
+```
 
-### Animations
-- Animations trigger on scroll using GSAP ScrollTrigger
-- Text animations use Intersection Observer with configurable threshold (currently 0.25 with 100ms delay)
-- Character animations use Splitting.js to split text into individual elements
-- Three.js components use shaders for complex visual effects
+## Animaciones — notas técnicas
 
-### Common Fixes
-1. **TypeScript Three.js errors**: Cast Three.js objects to `any` when type definitions don't match runtime behavior
-   - Example: `const camera = new THREE.OrthographicCamera(...) as any;`
-   - Example: `const mesh = new THREE.Mesh(...) as any;`
+### Demo9 exit (Hero h1)
+- Splitting.js reemplazado por DOM manual: `charRefs[wordIdx][charIdx]`
+- Vectores scatter pre-computados al mount: `rx ±720°, ry ±720°, rz ±180°, tx ±500px, ty ±400px, tz ±700px`
+- Trigger: scroll 5% → 55% de vh, easing easeInCubic
+- `perspective: 1200px` en el contenedor del h1
 
-2. **SSR "document is not defined"**: Use dynamic imports in page.tsx with `ssr: false`
-   ```typescript
-   const Component = dynamic(() => import("@/components/Component"), { ssr: false });
-   ```
+### Capabilities floating card
+- `stickyRef.style.borderRadius`: `"0px"` → `"20px"` cuando `p > 0.01`
+- `overflowX: "clip"`, `overflowY: "visible"` para no clipear el scatter sin generar scrollbar
 
-3. **Text cutoff in animations**: Adjust scale values (currently 1.15) and ensure no `overflow-hidden` on parent containers
+### CursorTrail
+- Render targets a 0.25x resolución (performance)
+- `mix-blend-mode: screen`: negro = transparente, los colores se suman al fondo oscuro
+- Colores del shader: purple `(0.25, 0.1, 0.9)` → cyan `(0.1, 0.9, 0.8)` → white `(1.0)`
 
-4. **Unescaped quotes in JSX**: Replace double quotes with `&quot;` entity
-   ```typescript
-   // Bad: "No ejecutamos tickets..."
-   // Good: &quot;No ejecutamos tickets...&quot;
-   ```
+## Fixes conocidos
 
-## Deployment
+1. **TypeScript + Three.js**: castear a `any` cuando las definiciones de tipo no coinciden con runtime
+2. **SSR**: dynamic imports con `ssr: false` en `page.tsx` para componentes que usan `document`
+3. **Quotes en JSX**: usar `&quot;` en lugar de `"`
+4. **overflow en scatter**: nunca poner `overflow: hidden` en contenedores padres de chars animados
 
-### GitHub & Vercel
-- Push changes to `main` branch: `git push origin main`
-- Vercel auto-deploys on push to the `marplacode-project` production environment
-- Project URL: https://marplacode.vercel.app
+## Deploy
+- Push a `main` → Vercel auto-deploya
+- Proyecto: https://marplacode.vercel.app
+- Commits y push los maneja el usuario desde su terminal
 
-### Build
-- Run `npm run build` to create production build
-- Build must pass TypeScript strict checking
-- No console errors or warnings in production build
-
-## Development Workflow
-
-1. **Make changes locally** in the appropriate component
-2. **Test in dev server** - animations should trigger on scroll/interaction
-3. **Run build test** - `npm run build` must pass
-4. **Commit with meaningful message** - describe what and why
-5. **Push to GitHub** - `git push origin main`
-6. **Verify Vercel deployment** - check build logs and visit production URL
-
-## Notes for Claude
-
-- This is a high-fidelity design implementation with complex animations
-- The user is a product designer focused on animation quality and visual effects
-- Prioritize animation smoothness and performance over code simplicity
-- Test all animations in different browsers and devices before pushing to prod
-- Be cautious with Three.js code - type safety is less important than runtime behavior
-- Always provide Vercel deployment link after pushing to prod
-- The user prefers terse responses without trailing summaries
-- Do not add unnecessary abstractions or utility functions - keep code focused on the task
+## Notas para Claude
+- Priorizar calidad de animación sobre simplicidad de código
+- Respuestas cortas, sin resúmenes al final
+- No agregar abstracciones innecesarias
+- Si el usuario pasa un link a código externo que no es accesible → pedir que adjunte el archivo antes de implementar alternativas
+- npm disponible desde la terminal del usuario (no desde el sandbox de Cowork)
 
 ## Last Updated
 April 6, 2026

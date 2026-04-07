@@ -1,235 +1,176 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+
 const cases = [
   {
     client: "Fintech startup",
     year: "2024",
     tag: "Producto / Web App",
-    context:
-      "Una startup de pagos digitales con tracción inicial necesitaba reemplazar un prototipo funcional por un producto real que pudiera escalar.",
-    problem:
-      "El flujo de onboarding tenía una tasa de abandono del 68%. Los usuarios llegaban pero no terminaban el proceso de alta.",
-    decision:
-      "Rediseñamos el onboarding completo desde cero basándonos en entrevistas con usuarios reales. Simplificamos de 11 pasos a 4, con validación en tiempo real.",
-    result: "Tasa de abandono bajó al 23% en los primeros 30 días.",
+    result: "Tasa de abandono: 68% → 23% en los primeros 30 días.",
+    panelBg: "linear-gradient(160deg, #1a0900 0%, #2d1100 40%, #1f0a00 70%, #150700 100%)",
+    thumbBg: "linear-gradient(135deg, #2d1100 0%, #1a0900 100%)",
   },
   {
     client: "SaaS B2B",
     year: "2023",
     tag: "Design System / Frontend",
-    context:
-      "Un SaaS de gestión de inventarios con 200+ clientes tenía inconsistencias visuales graves entre módulos desarrollados por distintos equipos.",
-    problem:
-      "Cada actualización de UI tomaba 3x más tiempo de lo esperado. El producto se veía como 3 productos distintos.",
-    decision:
-      "Construimos un design system desde cero con componentes documentados y tipados. Lo integramos directamente al repositorio con Storybook.",
-    result:
-      "Tiempo de desarrollo de nuevas features redujo un 40% en el trimestre siguiente.",
+    result: "Tiempo de desarrollo de nuevas features: −40% en el trimestre.",
+    panelBg: "linear-gradient(160deg, #0d0500 0%, #150700 40%, #0a0300 70%, #050100 100%)",
+    thumbBg: "linear-gradient(135deg, #150700 0%, #0a0300 100%)",
   },
   {
     client: "E-commerce regional",
     year: "2024",
     tag: "Web / Performance",
-    context:
-      "Una marca de indumentaria con presencia en 3 países necesitaba migrar de una plataforma legacy a un stack moderno sin perder SEO.",
-    problem:
-      "El sitio cargaba en 8.4 segundos en mobile. Las conversiones en mobile eran un 60% menores que en desktop.",
-    decision:
-      "Migramos a Next.js con ISR, optimizamos assets y rediseñamos el flujo de compra mobile-first. SEO preservado con redirecciones 301 estratégicas.",
-    result:
-      "Tiempo de carga: 1.8s. Conversiones mobile: +47% en el primer mes post-lanzamiento.",
+    result: "Carga mobile: 8.4s → 1.8s. Conversiones mobile: +47%.",
+    panelBg: "linear-gradient(160deg, #040100 0%, #080200 40%, #020100 70%, #000000 100%)",
+    thumbBg: "linear-gradient(135deg, #080200 0%, #020000 100%)",
   },
 ];
 
+const NOISE =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E\")";
+
 export default function Cases() {
+  const [active, setActive] = useState(0);
+  const panelRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const leftRef   = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    panelRefs.current.forEach((panel, i) => {
+      if (!panel) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActive(i); },
+        { threshold: 0.55 },
+      );
+      obs.observe(panel);
+      observers.push(obs);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
+  const scrollTo = (i: number) => {
+    panelRefs.current[i]?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const leftBgs = ["#1f0a00", "#0d0400", "#070200"];
+
   return (
     <section
       id="casos"
-      className="py-32 px-6"
-      style={{ background: "#F0EBE1" }}
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        background: "#1a0900",
+      }}
     >
-      <div className="max-w-5xl mx-auto">
-        {/* Section label */}
-        <span
-          className="text-xs tracking-wide"
+      {/* ── Left sticky panel ──────────────────────────────────────────────── */}
+      <div
+        ref={leftRef}
+        style={{
+          width: "36%",
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "4rem 3rem 3.5rem",
+          boxSizing: "border-box",
+          background: leftBgs[active],
+          transition: "background 0.8s cubic-bezier(0.16,1,0.3,1)",
+          borderRight: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
+        {/* Noise layer */}
+        <div
           style={{
-            fontFamily: "'DM Sans', sans-serif",
-            color: "#9A948D",
+            position: "absolute",
+            inset: 0,
+            backgroundImage: NOISE,
+            backgroundRepeat: "repeat",
+            backgroundSize: "180px 180px",
+            opacity: 0.06,
+            pointerEvents: "none",
           }}
-        >
-          (Casos)
-        </span>
+        />
 
-        {/* Headline */}
-        <h2
-          className="mt-4 mb-16 font-light leading-tight"
-          style={{
-            fontFamily: "'Cormorant', Georgia, serif",
-            fontSize: "clamp(2.8rem, 6vw, 5rem)",
-            color: "#1A1A1A",
-          }}
-        >
-          Sin portfolio pasivo.
-          <br />
-          <em>Con contexto, problema y resultado.</em>
-        </h2>
-
-        {/* Cases list */}
-        <div>
-          {cases.map((c, i) => (
-            <div
-              key={i}
-              style={{
-                borderTop: "1px solid rgba(26,26,26,0.1)",
-                paddingTop: "3rem",
-                paddingBottom: "3rem",
-              }}
-            >
-              {/* Case header */}
-              <div className="flex flex-wrap items-baseline justify-between gap-4 mb-8">
-                <div className="flex items-baseline gap-4">
-                  <h3
-                    className="font-light"
-                    style={{
-                      fontFamily: "'Cormorant', Georgia, serif",
-                      fontSize: "clamp(1.6rem, 3vw, 2rem)",
-                      color: "#1A1A1A",
-                    }}
-                  >
-                    {c.client}
-                  </h3>
-                  <span
-                    className="text-xs px-3 py-1 rounded-full"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      background: "rgba(26,26,26,0.06)",
-                      color: "#6B6560",
-                      border: "1px solid rgba(26,26,26,0.08)",
-                    }}
-                  >
-                    {c.tag}
-                  </span>
-                </div>
-                <span
-                  className="text-sm"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    color: "rgba(26,26,26,0.3)",
-                  }}
-                >
-                  {c.year}
-                </span>
-              </div>
-
-              {/* Case grid */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
-                <div>
-                  <span
-                    className="text-xs tracking-widest uppercase block mb-3"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#9A948D",
-                    }}
-                  >
-                    Contexto
-                  </span>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#6B6560",
-                    }}
-                  >
-                    {c.context}
-                  </p>
-                </div>
-                <div>
-                  <span
-                    className="text-xs tracking-widest uppercase block mb-3"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#9A948D",
-                    }}
-                  >
-                    Problema
-                  </span>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#6B6560",
-                    }}
-                  >
-                    {c.problem}
-                  </p>
-                </div>
-                <div>
-                  <span
-                    className="text-xs tracking-widest uppercase block mb-3"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#9A948D",
-                    }}
-                  >
-                    Decisión clave
-                  </span>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#6B6560",
-                    }}
-                  >
-                    {c.decision}
-                  </p>
-                </div>
-                <div
-                  className="p-5 rounded-xl"
-                  style={{
-                    background: "rgba(26,26,26,0.04)",
-                    border: "1px solid rgba(26,26,26,0.08)",
-                  }}
-                >
-                  <span
-                    className="text-xs tracking-widest uppercase block mb-3"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#E8341E",
-                    }}
-                  >
-                    Resultado
-                  </span>
-                  <p
-                    className="text-sm leading-relaxed font-medium"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "#1A1A1A",
-                    }}
-                  >
-                    {c.result}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-          <div style={{ borderTop: "1px solid rgba(26,26,26,0.1)" }} />
+        {/* Top */}
+        <div style={{ position: "relative" }}>
+          <span style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.65rem", letterSpacing: "0.12em", color: "rgba(255,255,255,0.25)" }}>
+            (Casos)
+          </span>
+          <h2 style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(2rem, 3vw, 2.8rem)", color: "rgba(255,255,255,0.9)", fontWeight: 300, lineHeight: 1.15, marginTop: "1rem", marginBottom: "1.1rem" }}>
+            Sin portfolio
+            <br /><em style={{ color: "rgba(255,255,255,0.4)" }}>pasivo.</em>
+          </h2>
+          <p style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", lineHeight: 1.65, maxWidth: "26ch" }}>
+            Contexto, problema, decisión y resultado real. Sin casos de estudio genéricos.
+          </p>
         </div>
 
-        <p
-          className="mt-8 text-sm text-center"
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            color: "#9A948D",
-          }}
-        >
-          Los nombres de clientes son confidenciales por acuerdo.{" "}
-          <a
-            href="#contacto"
-            style={{ color: "#1A1A1A", textDecoration: "underline", textUnderlineOffset: "3px" }}
+        {/* Vertical tabs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem", position: "relative" }}>
+          {cases.map((c, i) => (
+            <button
+              key={i}
+              onClick={() => scrollTo(i)}
+              style={{ display: "flex", alignItems: "center", gap: "1rem", background: "none", border: "none", cursor: "pointer", padding: "0.65rem 0.7rem", borderRadius: "10px", backgroundColor: active === i ? "rgba(255,255,255,0.07)" : "transparent", transition: "background-color 0.25s", textAlign: "left" }}
+            >
+              <div style={{ width: 76, height: 48, borderRadius: 7, background: c.thumbBg, flexShrink: 0, border: active === i ? "1.5px solid rgba(255,255,255,0.3)" : "1.5px solid rgba(255,255,255,0.06)", transition: "border-color 0.25s", overflow: "hidden", position: "relative" }}>
+                <div style={{ position: "absolute", inset: 0, backgroundImage: NOISE, backgroundSize: "80px 80px", opacity: 0.1 }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.82rem", color: active === i ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)", transition: "color 0.25s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.client}</div>
+                <div style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.6rem", color: "rgba(255,255,255,0.2)", marginTop: "0.2rem" }}>{c.tag}</div>
+              </div>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.6)", flexShrink: 0, opacity: active === i ? 1 : 0, transition: "opacity 0.25s" }} />
+            </button>
+          ))}
+        </div>
+
+        {/* Bottom */}
+        <div style={{ position: "relative" }}>
+          <button style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.72rem", letterSpacing: "0.09em", background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "0.75rem 1.6rem", cursor: "pointer" }}>
+            VER TODOS
+          </button>
+          <p style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.58rem", color: "rgba(255,255,255,0.2)", marginTop: "0.85rem", lineHeight: 1.5 }}>
+            Los nombres son confidenciales por acuerdo.{" "}
+            <a href="#contacto" style={{ color: "rgba(255,255,255,0.35)", textDecoration: "underline", textUnderlineOffset: "2px" }}>Pedinos referencias.</a>
+          </p>
+        </div>
+      </div>
+
+      {/* ── Right scrolling panels ─────────────────────────────────────────── */}
+      <div style={{ width: "64%" }}>
+        {cases.map((c, i) => (
+          <div
+            key={i}
+            ref={(el) => { panelRefs.current[i] = el; }}
+            style={{ height: "100vh", position: "relative", display: "flex", flexDirection: "column", justifyContent: "flex-end", overflow: "hidden" }}
           >
-            Pedinos referencias directas.
-          </a>
-        </p>
+            <div style={{ position: "absolute", inset: 0, background: c.panelBg }} />
+            <div style={{ position: "absolute", inset: 0, backgroundImage: NOISE, backgroundRepeat: "repeat", backgroundSize: "180px 180px", opacity: 0.08, mixBlendMode: "overlay" }} />
+            <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 65% 45%, transparent 35%, rgba(0,0,0,0.45) 100%)" }} />
+            <div style={{ position: "absolute", top: "50%", right: "5%", transform: "translateY(-50%)", fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(8rem, 20vw, 18rem)", color: "rgba(255,255,255,0.03)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
+              0{i + 1}
+            </div>
+            <div style={{ position: "relative", zIndex: 1, padding: "2.5rem 3rem", background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.4rem" }}>
+                <span style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.6rem", letterSpacing: "0.14em", color: "rgba(255,255,255,0.25)" }}>{c.year}</span>
+                <span style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.58rem", letterSpacing: "0.1em", padding: "0.3rem 0.85rem", borderRadius: "999px", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  [{c.tag.toUpperCase()}]
+                </span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "2rem" }}>
+                <h3 style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(1.8rem, 3vw, 2.6rem)", color: "rgba(255,255,255,0.92)", fontWeight: 300, lineHeight: 1.1, margin: 0 }}>{c.client}</h3>
+                <p style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.55, maxWidth: "32ch", textAlign: "right", margin: 0, flexShrink: 0 }}>{c.result}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );

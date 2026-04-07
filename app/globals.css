@@ -27,7 +27,7 @@ html {
 body {
   background-color: var(--black);
   color: var(--text-cream);
-  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  font-family: "Tilt Warp", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

@@ -1,113 +1,258 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import AnimatedHeadline from "./AnimatedHeadline";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import CursorTrail from "./CursorTrail";
 import DitherBg from "./DitherBg";
+import WavyLines from "./WavyLines";
+
+gsap.registerPlugin(ScrollTrigger);
+
+const BRAND      = "Marplacode";
+const TAGLINE    = "Convertimos ideas en productos que escalan.";
+const DESCRIPTOR = "Partner estratégico para founders y equipos que construyen con criterio.";
 
 export default function Hero() {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const availRef   = useRef<HTMLDivElement>(null);
+  const sectionRef    = useRef<HTMLElement>(null);
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const titleRef      = useRef<HTMLHeadingElement>(null);
+  const taglineRef    = useRef<HTMLParagraphElement>(null);
+  const descRef       = useRef<HTMLParagraphElement>(null);
+  const brandCharRefs = useRef<(HTMLElement | null)[]>([]);
+  const brandOffsets  = useRef<{ x: number; y: number }[]>([]);
 
-  // ── Fade all hero content as user scrolls away ───────────────────────────
+  // ── Fit title to full container width ────────────────────────────────────
+  const measureRef = useRef<HTMLSpanElement>(null);
+
   useEffect(() => {
-    const onScroll = () => {
-      const t = Math.min(1, Math.max(0, (window.scrollY / window.innerHeight - 0.1) / 0.6));
-      const opacity = String(1 - t);
-      if (contentRef.current) contentRef.current.style.opacity = opacity;
-      if (availRef.current)   availRef.current.style.opacity   = opacity;
+    const fit = () => {
+      const container = containerRef.current;
+      const measure   = measureRef.current;
+      const title     = titleRef.current;
+      if (!container || !measure || !title) return;
+
+      // Set base size on the h1, measure the inner span (always content-width)
+      title.style.fontSize = "200px";
+      void measure.offsetWidth; // force reflow
+      const containerW = container.offsetWidth;
+      const textW      = measure.offsetWidth;
+      if (!textW) return;
+      title.style.fontSize = `${(containerW / textW) * 200 * 0.985}px`;
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    // Run immediately, after fonts, and again after 600ms as safety net
+    fit();
+    document.fonts.ready.then(() => {
+      requestAnimationFrame(fit);
+      setTimeout(fit, 600);
+    });
+
+    const ro = new ResizeObserver(() => requestAnimationFrame(fit));
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // ── Pre-compute scatter offsets ───────────────────────────────────────────
+  useEffect(() => {
+    brandOffsets.current = Array.from({ length: BRAND.length }, () => ({
+      x: gsap.utils.random(-70, 70),
+      y: gsap.utils.random(-70, 70),
+    }));
+  }, []);
+
+  // ── Entry: Demo10 random scatter → rest ──────────────────────────────────
+  useEffect(() => {
+    const chars = brandCharRefs.current.filter(Boolean) as HTMLElement[];
+    const tl    = gsap.timeline({ delay: 0.15 });
+
+    tl.fromTo(
+      chars,
+      {
+        opacity:  0,
+        xPercent: (i) => brandOffsets.current[i]?.x ?? 0,
+        yPercent: (i) => brandOffsets.current[i]?.y ?? 0,
+      },
+      {
+        opacity:  1,
+        xPercent: 0,
+        yPercent: 0,
+        duration: 0.7,
+        ease:     "power4",
+        stagger:  { each: 0.028, from: "random" },
+      }
+    );
+
+    if (taglineRef.current) {
+      tl.fromTo(
+        taglineRef.current,
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power3" },
+        0.35
+      );
+    }
+    if (descRef.current) {
+      tl.fromTo(
+        descRef.current,
+        { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power3" },
+        0.45
+      );
+    }
+  }, []);
+
+  // ── Exit: scroll-driven Demo10 scatter out ────────────────────────────────
+  useEffect(() => {
+    const chars = brandCharRefs.current.filter(Boolean) as HTMLElement[];
+    const tl    = gsap.timeline({ paused: true });
+
+    tl.fromTo(
+      chars,
+      { opacity: 1, xPercent: 0, yPercent: 0 },
+      {
+        opacity:  0,
+        xPercent: (i) => brandOffsets.current[i]?.x ?? 0,
+        yPercent: (i) => brandOffsets.current[i]?.y ?? 0,
+        duration: 0.3,
+        ease:     "power4.in",
+        stagger:  { each: 0.03, from: "random" },
+      }
+    );
+    if (taglineRef.current) tl.to(taglineRef.current, { opacity: 0, y: -10, duration: 0.2 }, 0);
+    if (descRef.current)    tl.to(descRef.current,    { opacity: 0, y: -10, duration: 0.2 }, 0);
+
+    // Delay setup until fonts+fit are done so titleRef has the real size
+    const setup = () => {
+      const title = titleRef.current;
+      if (!title) return;
+
+      const heroH       = window.innerHeight;
+      // Bottom edge of the title in viewport coords (hero is sticky at top:0)
+      const titleBottom = title.getBoundingClientRect().bottom;
+      // scrollY at which the rising content section first touches the title bottom
+      const animStart   = heroH - titleBottom;
+      // scroll distance to complete the animation (content travels from title-bottom to title-top)
+      const animRange   = titleBottom;
+
+      ScrollTrigger.create({
+        trigger:  document.body,
+        start:    "top top",
+        end:      `+=${heroH}`,
+        scrub:    true,
+        onUpdate: (self) => {
+          const scrolled = self.progress * heroH;
+          const p = Math.max(0, Math.min(1, (scrolled - animStart) / animRange));
+          tl.progress(p);
+        },
+      });
+    };
+
+    document.fonts.ready.then(() => requestAnimationFrame(setup));
+
+    return () => {
+      ScrollTrigger.getAll().forEach((st) => st.kill());
+      tl.kill();
+    };
   }, []);
 
   return (
     <section
-      className="relative min-h-screen flex items-center justify-center"
-      style={{ background: "#0D0D0D" }}
+      ref={sectionRef}
+      style={{
+        background:     "#0D0D0D",
+        minHeight:      "100svh",
+        display:        "flex",
+        flexDirection:  "column",
+        justifyContent: "space-between",
+        position:       "relative",
+        overflow:       "hidden",
+      }}
     >
       <DitherBg />
+      <WavyLines />
       <CursorTrail />
 
+      {/* ── Giant full-width title ──────────────────────────────────────── */}
       <div
-        ref={contentRef}
-        className="relative max-w-5xl mx-auto px-6 py-12 text-center z-10"
+        ref={containerRef}
+        style={{ width: "100%", position: "relative", zIndex: 10 }}
       >
-        <AnimatedHeadline
-          className="font-light leading-[0.92] tracking-[-0.01em] block"
+        <h1
+          ref={titleRef}
           style={{
-            fontFamily: "'Abril Fatface', Georgia, serif",
-            fontSize: "clamp(4rem, 10vw, 9rem)",
-            color: "#EDE8DF",
+            fontFamily:    "'Tilt Warp', sans-serif",
+            fontWeight:    800,
+            color:         "#EDE8DF",
+            lineHeight:    0.86,
+            letterSpacing: "-0.07em",
+            whiteSpace:    "nowrap",
+            userSelect:    "none",
+            margin:        0,
+            padding:       0,
           }}
         >
-          {`Convertimos ideas\nen productos\nque escalan.`}
-        </AnimatedHeadline>
-
-        {/* Subheadline */}
-        <p
-          className="mt-10 mx-auto"
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontSize: "14px",
-            color: "#9A948D",
-            letterSpacing: "0.04em",
-            maxWidth: "340px",
-            lineHeight: "1.7",
-          }}
-        >
-          Para founders y startups que quieren construir
-          con criterio, no solo con velocidad.
-        </p>
-
-        {/* CTAs */}
-        <div className="mt-12 flex items-center justify-center gap-4 flex-wrap">
-          <a
-            href="#contacto"
-            className="text-white text-sm px-7 py-3.5 rounded-full transition-colors"
-            style={{
-              background: "#E8341E",
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#C82D19")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#E8341E")}
-          >
-            Iniciar proyecto
-          </a>
-          <a
-            href="#casos"
-            className="flex items-center gap-2.5 text-sm transition-colors"
-            style={{
-              color: "rgba(237,232,223,0.6)",
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#EDE8DF")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,232,223,0.6)")}
-          >
-            Ver casos
-            <span
-              className="w-8 h-8 rounded-full border flex items-center justify-center text-xs"
-              style={{ borderColor: "rgba(237,232,223,0.2)" }}
-            >
-              ↗
-            </span>
-          </a>
-        </div>
+          {/* inner span: display inline-block so offsetWidth = text content width */}
+          <span ref={measureRef} style={{ display: "inline-block" }}>
+            {BRAND.split("").map((ch, ci) => (
+              <span
+                key={ci}
+                ref={(el) => { brandCharRefs.current[ci] = el; }}
+                style={{ display: "inline-block", willChange: "transform, opacity" }}
+              >
+                {ch}
+              </span>
+            ))}
+          </span>
+        </h1>
       </div>
 
-      {/* Availability dot */}
+      {/* ── Bottom row ─────────────────────────────────────────────────── */}
       <div
-        ref={availRef}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}
+        style={{
+          display:        "flex",
+          justifyContent: "space-between",
+          alignItems:     "flex-end",
+          padding:        "clamp(1.5rem, 3vw, 2.5rem)",
+          paddingBottom:  "clamp(2rem, 5vh, 4rem)",
+          position:       "relative",
+          zIndex:         10,
+        }}
       >
-        <span
-          className="w-2 h-2 rounded-full animate-pulse"
-          style={{ background: "#22C55E" }}
-        />
-        <span className="text-xs" style={{ color: "#9A948D" }}>
-          Tomando proyectos ahora
-        </span>
+        <p
+          ref={taglineRef}
+          style={{
+            fontFamily:    "'Tilt Warp', sans-serif",
+            fontSize:      "clamp(0.95rem, 1.8vw, 1.4rem)",
+            color:         "#EDE8DF",
+            fontWeight:    600,
+            letterSpacing: "-0.015em",
+            lineHeight:    1.2,
+            maxWidth:      "clamp(240px, 38vw, 520px)",
+            opacity:       0,
+            margin:        0,
+          }}
+        >
+          {TAGLINE}
+        </p>
+
+        <p
+          ref={descRef}
+          style={{
+            fontFamily:    "'Tilt Warp', sans-serif",
+            fontSize:      "clamp(0.6rem, 0.85vw, 0.8rem)",
+            color:         "rgba(237,232,223,0.4)",
+            fontWeight:    400,
+            textAlign:     "right",
+            maxWidth:      "clamp(160px, 18vw, 240px)",
+            lineHeight:    1.55,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            opacity:       0,
+            margin:        0,
+          }}
+        >
+          {DESCRIPTOR}
+        </p>
       </div>
     </section>
   );

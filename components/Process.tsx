@@ -51,7 +51,7 @@ export default function Process() {
         <span
           className="text-xs tracking-wide"
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Tilt Warp', sans-serif",
             color: "rgba(237,232,223,0.4)",
           }}
         >
@@ -62,7 +62,7 @@ export default function Process() {
         <h2
           className="mt-4 mb-4 font-light leading-tight"
           style={{
-            fontFamily: "'Cormorant', Georgia, serif",
+            fontFamily: "'Tilt Warp', sans-serif",
             fontSize: "clamp(2.8rem, 6vw, 5rem)",
             color: "#EDE8DF",
           }}
@@ -72,7 +72,7 @@ export default function Process() {
         <p
           className="mb-16 font-light leading-tight"
           style={{
-            fontFamily: "'Cormorant', Georgia, serif",
+            fontFamily: "'Tilt Warp', sans-serif",
             fontSize: "clamp(2.8rem, 6vw, 5rem)",
             color: "rgba(237,232,223,0.35)",
           }}
@@ -93,7 +93,7 @@ export default function Process() {
                 <span
                   className="text-xs pt-1"
                   style={{
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Tilt Warp', sans-serif",
                     color: "rgba(237,232,223,0.25)",
                   }}
                 >
@@ -107,7 +107,7 @@ export default function Process() {
                   <h3
                     className="font-light"
                     style={{
-                      fontFamily: "'Cormorant', Georgia, serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       fontSize: "clamp(1.4rem, 2.5vw, 1.8rem)",
                       color: "#EDE8DF",
                     }}
@@ -117,7 +117,7 @@ export default function Process() {
                   <span
                     className="text-xs px-3 py-1 rounded-full flex-shrink-0"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       background: "rgba(237,232,223,0.04)",
                       color: "rgba(237,232,223,0.25)",
                       border: "1px solid rgba(237,232,223,0.06)",
@@ -129,7 +129,7 @@ export default function Process() {
                 <p
                   className="text-sm leading-relaxed"
                   style={{
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Tilt Warp', sans-serif",
                     color: "rgba(237,232,223,0.5)",
                   }}
                 >
@@ -143,7 +143,7 @@ export default function Process() {
                   <span
                     className="text-xs tracking-widest uppercase block mb-2"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.25)",
                     }}
                   >
@@ -152,7 +152,7 @@ export default function Process() {
                   <span
                     className="text-sm"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.5)",
                     }}
                   >
@@ -163,7 +163,7 @@ export default function Process() {
                   <span
                     className="text-xs tracking-widest uppercase block mb-2"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(232,52,30,0.6)",
                     }}
                   >
@@ -172,7 +172,7 @@ export default function Process() {
                   <span
                     className="text-sm"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.3)",
                     }}
                   >

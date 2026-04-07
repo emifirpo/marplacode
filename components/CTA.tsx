@@ -29,7 +29,7 @@ export default function CTA() {
         <span
           className="text-xs tracking-wide"
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'Tilt Warp', sans-serif",
             color: "rgba(237,232,223,0.4)",
           }}
         >
@@ -42,7 +42,7 @@ export default function CTA() {
             <h2
               className="font-light leading-[0.95] mb-8"
               style={{
-                fontFamily: "'Cormorant', Georgia, serif",
+                fontFamily: "'Tilt Warp', sans-serif",
                 fontSize: "clamp(3rem, 7vw, 6rem)",
                 color: "#EDE8DF",
               }}
@@ -56,7 +56,7 @@ export default function CTA() {
             <p
               className="text-sm leading-relaxed mb-12"
               style={{
-                fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'Tilt Warp', sans-serif",
                 color: "rgba(237,232,223,0.45)",
                 maxWidth: "300px",
               }}
@@ -71,7 +71,7 @@ export default function CTA() {
                 href="mailto:hello@marplacode.com"
                 className="flex items-center gap-3 transition-colors group"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Tilt Warp', sans-serif",
                   color: "rgba(237,232,223,0.45)",
                   textDecoration: "none",
                 }}
@@ -95,7 +95,7 @@ export default function CTA() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 transition-colors"
                 style={{
-                  fontFamily: "'DM Sans', sans-serif",
+                  fontFamily: "'Tilt Warp', sans-serif",
                   color: "rgba(237,232,223,0.45)",
                   textDecoration: "none",
                 }}
@@ -135,7 +135,7 @@ export default function CTA() {
                 <h3
                   className="text-xl mb-2"
                   style={{
-                    fontFamily: "'Cormorant', Georgia, serif",
+                    fontFamily: "'Tilt Warp', sans-serif",
                     color: "#EDE8DF",
                   }}
                 >
@@ -144,7 +144,7 @@ export default function CTA() {
                 <p
                   className="text-sm"
                   style={{
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Tilt Warp', sans-serif",
                     color: "rgba(237,232,223,0.5)",
                   }}
                 >
@@ -158,7 +158,7 @@ export default function CTA() {
                   <label
                     className="text-xs tracking-widest uppercase block mb-2"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.3)",
                     }}
                   >
@@ -176,7 +176,7 @@ export default function CTA() {
                       border: "1px solid rgba(237,232,223,0.08)",
                       borderRadius: "12px",
                       color: "#EDE8DF",
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                     }}
                   />
                 </div>
@@ -186,7 +186,7 @@ export default function CTA() {
                   <label
                     className="text-xs tracking-widest uppercase block mb-2"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.3)",
                     }}
                   >
@@ -204,7 +204,7 @@ export default function CTA() {
                       border: "1px solid rgba(237,232,223,0.08)",
                       borderRadius: "12px",
                       color: "#EDE8DF",
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                     }}
                   />
                 </div>
@@ -214,7 +214,7 @@ export default function CTA() {
                   <label
                     className="text-xs tracking-widest uppercase block mb-3"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.3)",
                     }}
                   >
@@ -228,7 +228,7 @@ export default function CTA() {
                         onClick={() => setFormData({ ...formData, budget: b })}
                         className="px-4 py-2 rounded-full text-sm transition-all"
                         style={{
-                          fontFamily: "'DM Sans', sans-serif",
+                          fontFamily: "'Tilt Warp', sans-serif",
                           background: formData.budget === b ? "#E8341E" : "transparent",
                           color: formData.budget === b ? "#fff" : "rgba(237,232,223,0.4)",
                           border: formData.budget === b
@@ -247,7 +247,7 @@ export default function CTA() {
                   <label
                     className="text-xs tracking-widest uppercase block mb-2"
                     style={{
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                       color: "rgba(237,232,223,0.3)",
                     }}
                   >
@@ -265,7 +265,7 @@ export default function CTA() {
                       border: "1px solid rgba(237,232,223,0.08)",
                       borderRadius: "12px",
                       color: "#EDE8DF",
-                      fontFamily: "'DM Sans', sans-serif",
+                      fontFamily: "'Tilt Warp', sans-serif",
                     }}
                   />
                 </div>
@@ -277,7 +277,7 @@ export default function CTA() {
                   style={{
                     background: "#E8341E",
                     color: "#fff",
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Tilt Warp', sans-serif",
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#C82D19")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "#E8341E")}
@@ -288,7 +288,7 @@ export default function CTA() {
                 <p
                   className="text-xs text-center"
                   style={{
-                    fontFamily: "'DM Sans', sans-serif",
+                    fontFamily: "'Tilt Warp', sans-serif",
                     color: "rgba(237,232,223,0.2)",
                   }}
                 >

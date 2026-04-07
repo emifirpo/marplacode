@@ -17,12 +17,12 @@ export default function Navbar() {
       {/* Floating bottom pill nav */}
       <nav
         className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 flex items-center gap-1 rounded-full px-2 py-2 shadow-2xl"
-        style={{ background: "#1C1C1C", fontFamily: "'DM Sans', sans-serif" }}
+        style={{ background: "#1C1C1C", fontFamily: "'Tilt Warp', sans-serif" }}
       >
         {/* Logo */}
         <span
           className="text-[#EDE8DF] text-xl font-medium px-3 pr-4 select-none"
-          style={{ fontFamily: "'Cormorant', Georgia, serif" }}
+          style={{ fontFamily: "'Tilt Warp', sans-serif" }}
         >
           M;
         </span>
@@ -56,7 +56,7 @@ export default function Navbar() {
       {open && (
         <div
           className="fixed inset-0 z-[60] flex flex-col items-center justify-center"
-          style={{ background: "#0D0D0D", fontFamily: "'DM Sans', sans-serif" }}
+          style={{ background: "#0D0D0D", fontFamily: "'Tilt Warp', sans-serif" }}
         >
           <button
             onClick={() => setOpen(false)}
@@ -74,7 +74,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 className="font-light leading-none transition-colors"
                 style={{
-                  fontFamily: "'Cormorant', Georgia, serif",
+                  fontFamily: "'Tilt Warp', sans-serif",
                   fontSize: "clamp(3rem, 8vw, 5rem)",
                   color: "#EDE8DF",
                 }}
