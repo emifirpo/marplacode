@@ -19,7 +19,9 @@ export default function Home() {
         <ContentWrapper>
           <Filter />
         </ContentWrapper>
-        <Capabilities />
+        <div style={{ marginTop: "-100vh" }}>
+          <Capabilities />
+        </div>
         <Process />
         <Differentiator />
         <CTA />

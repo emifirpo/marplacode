@@ -1,5 +1,7 @@
 "use client";
 
+import FlipLink from "./FlipLink";
+
 export default function Footer() {
   const year = new Date().getFullYear();
 
@@ -17,14 +19,14 @@ export default function Footer() {
           <div>
             <span
               className="text-2xl font-light"
-              style={{ fontFamily: "'Tilt Warp', sans-serif", color: "#1A1A1A" }}
+              style={{ fontFamily: "'DM Sans', sans-serif", color: "#1A1A1A" }}
             >
               M;
             </span>
             <p
               className="text-xs mt-1 max-w-[200px] leading-relaxed"
               style={{
-                fontFamily: "'Tilt Warp', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 color: "#9A948D",
               }}
             >
@@ -38,59 +40,34 @@ export default function Footer() {
           <nav className="flex flex-wrap gap-8">
             {[
               { label: "Capacidades", href: "#capacidades" },
-              { label: "Casos", href: "#casos" },
-              { label: "Proceso", href: "#proceso" },
-              { label: "Contacto", href: "#contacto" },
+              { label: "Casos",       href: "#casos"       },
+              { label: "Proceso",     href: "#proceso"     },
+              { label: "Contacto",    href: "#contacto"    },
             ].map((link) => (
-              <a
+              <FlipLink
                 key={link.href}
                 href={link.href}
-                className="text-sm transition-colors"
-                style={{
-                  fontFamily: "'Tilt Warp', sans-serif",
-                  color: "#9A948D",
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#1A1A1A")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#9A948D")}
+                style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.875rem", color: "#9A948D", textDecoration: "none" }}
               >
                 {link.label}
-              </a>
+              </FlipLink>
             ))}
           </nav>
 
           {/* Social */}
           <div className="flex items-center gap-6">
-            <a
+            <FlipLink
               href="https://linkedin.com/company/marplacode"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm transition-colors"
-              style={{
-                fontFamily: "'Tilt Warp', sans-serif",
-                color: "#9A948D",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#1A1A1A")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#9A948D")}
+              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.875rem", color: "#9A948D", textDecoration: "none" }}
             >
               LinkedIn
-            </a>
-            <a
+            </FlipLink>
+            <FlipLink
               href="https://instagram.com/marplacode"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm transition-colors"
-              style={{
-                fontFamily: "'Tilt Warp', sans-serif",
-                color: "#9A948D",
-                textDecoration: "none",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#1A1A1A")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#9A948D")}
+              style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.875rem", color: "#9A948D", textDecoration: "none" }}
             >
               Instagram
-            </a>
+            </FlipLink>
           </div>
         </div>
 
@@ -98,13 +75,13 @@ export default function Footer() {
         <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
           <span
             className="text-xs"
-            style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(26,26,26,0.3)" }}
+            style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(26,26,26,0.3)" }}
           >
             © {year} Marplacode. Todos los derechos reservados.
           </span>
           <span
             className="text-xs"
-            style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(26,26,26,0.3)" }}
+            style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(26,26,26,0.3)" }}
           >
             Construido con Next.js · Diseñado con criterio
           </span>

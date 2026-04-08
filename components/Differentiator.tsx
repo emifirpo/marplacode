@@ -34,7 +34,7 @@ export default function Differentiator() {
         <span
           className="text-xs tracking-wide"
           style={{
-            fontFamily: "'Tilt Warp', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
             color: "#9A948D",
           }}
         >
@@ -45,7 +45,7 @@ export default function Differentiator() {
         <h2
           className="mt-4 mb-16 font-light leading-tight"
           style={{
-            fontFamily: "'Tilt Warp', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
             fontSize: "clamp(2.8rem, 6vw, 5rem)",
             color: "#1A1A1A",
           }}
@@ -69,7 +69,7 @@ export default function Differentiator() {
               <span
                 className="text-xs tracking-widest uppercase"
                 style={{
-                  fontFamily: "'Tilt Warp', sans-serif",
+                  fontFamily: "'DM Sans', sans-serif",
                   color: "rgba(26,26,26,0.3)",
                 }}
               >
@@ -80,7 +80,7 @@ export default function Differentiator() {
               <span
                 className="text-xs tracking-widest uppercase"
                 style={{
-                  fontFamily: "'Tilt Warp', sans-serif",
+                  fontFamily: "'DM Sans', sans-serif",
                   color: "#E8341E",
                 }}
               >
@@ -109,7 +109,7 @@ export default function Differentiator() {
                 <span
                   className="text-sm leading-snug"
                   style={{
-                    fontFamily: "'Tilt Warp', sans-serif",
+                    fontFamily: "'DM Sans', sans-serif",
                     color: "#9A948D",
                   }}
                 >
@@ -123,7 +123,7 @@ export default function Differentiator() {
                 <span
                   className="text-sm leading-snug"
                   style={{
-                    fontFamily: "'Tilt Warp', sans-serif",
+                    fontFamily: "'DM Sans', sans-serif",
                     color: "#1A1A1A",
                     fontWeight: 500,
                   }}
@@ -140,7 +140,7 @@ export default function Differentiator() {
           <blockquote
             className="font-light leading-tight"
             style={{
-              fontFamily: "'Tilt Warp', sans-serif",
+              fontFamily: "'DM Sans', sans-serif",
               fontSize: "clamp(1.8rem, 4vw, 3rem)",
               color: "#1A1A1A",
             }}

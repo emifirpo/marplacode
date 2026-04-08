@@ -30,17 +30,15 @@ const capabilities = [
 ];
 
 const cases = [
-  { client: "Fintech startup",     year: "2024", tag: "Producto / Web App",
-    result: "Tasa de abandono: 68% → 23% en los primeros 30 días.",
-    panelBg: "linear-gradient(160deg, #1a0900 0%, #2d1100 40%, #1f0a00 70%, #150700 100%)",
-    thumbBg: "linear-gradient(135deg, #2d1100 0%, #1a0900 100%)", leftBg: "#1f0a00" },
+  { client: "Watch",                year: "2024", tag: "Web Experience",
+    result: "Experiencia web inmersiva para marca de belleza. Proyecto de laboratorio interno.",
+    video: "/watch.mp4",
+    thumbBg: "linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%)", leftBg: "#0f0f1a" },
   { client: "SaaS B2B",            year: "2023", tag: "Design System / Frontend",
     result: "Tiempo de desarrollo de nuevas features: −40% en el trimestre.",
-    panelBg: "linear-gradient(160deg, #0d0500 0%, #150700 40%, #0a0300 70%, #050100 100%)",
     thumbBg: "linear-gradient(135deg, #150700 0%, #0a0300 100%)", leftBg: "#0d0400" },
   { client: "E-commerce regional",  year: "2024", tag: "Web / Performance",
     result: "Carga mobile: 8.4s → 1.8s. Conversiones mobile: +47%.",
-    panelBg: "linear-gradient(160deg, #040100 0%, #080200 40%, #020100 70%, #000000 100%)",
     thumbBg: "linear-gradient(135deg, #080200 0%, #020000 100%)", leftBg: "#070200" },
 ];
 
@@ -77,6 +75,8 @@ export default function Capabilities() {
   const caseTabNameRefs  = useRef<(HTMLDivElement | null)[]>([]);
   const caseTabThumbRefs = useRef<(HTMLDivElement | null)[]>([]);
   const caseTabDotRefs   = useRef<(HTMLDivElement | null)[]>([]);
+  const pixelGridRef     = useRef<HTMLDivElement>(null);
+  const pixelTimeouts    = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const chars0Ref = useRef<(HTMLElement | null)[]>([]);
   const chars1Ref = useRef<(HTMLElement | null)[]>([]);
@@ -92,6 +92,20 @@ export default function Capabilities() {
     scatter0.current = make(LINE0.length);
     scatter1.current = make(LINE1.length);
     scatter2.current = make(LINE2.length);
+
+    // Inicializar pixel grid (7×7 = 49 píxeles)
+    const grid = pixelGridRef.current;
+    if (grid) {
+      const G = 7, pct = 100 / G;
+      for (let r = 0; r < G; r++) {
+        for (let c = 0; c < G; c++) {
+          const px = document.createElement("div");
+          px.style.cssText = `position:absolute;width:${pct}%;height:${pct}%;left:${c*pct}%;top:${r*pct}%;background:rgba(13,13,13,0.97);opacity:0;transition:opacity 0s;`;
+          grid.appendChild(px);
+        }
+      }
+    }
+    return () => { pixelTimeouts.current.forEach(clearTimeout); };
   }, []);
 
   useEffect(() => {
@@ -115,15 +129,56 @@ export default function Capabilities() {
     // gallery X position of cases card (before translate)
     let xCasesLeft = 0;
 
-    const showCase = (idx: number) => {
-      if (idx === activeCase) return;
-      activeCase = idx;
-      caseRightRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
+    const applyTabState = (idx: number) => {
       caseTabRefs.current.forEach((el, i) => { if (el) el.style.backgroundColor = i === idx ? "rgba(255,255,255,0.07)" : "transparent"; });
       caseTabNameRefs.current.forEach((el, i) => { if (el) el.style.color = i === idx ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)"; });
       caseTabThumbRefs.current.forEach((el, i) => { if (el) el.style.borderColor = i === idx ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.06)"; });
       caseTabDotRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
-      if (casesLeft) casesLeft.style.background = cases[idx].leftBg;
+    };
+
+    const GRID_SIZE = 7;
+    const TOTAL_PX  = GRID_SIZE * GRID_SIZE;
+    const STEP_MS   = 280 / TOTAL_PX;
+
+    const showCase = (idx: number) => {
+      if (idx === activeCase) return;
+      const from = activeCase;
+      activeCase = idx; // marca inmediatamente para evitar re-triggers
+      applyTabState(idx);
+
+      const grid = pixelGridRef.current;
+      if (!grid || from === -1) {
+        // Primera vez: sin transición, mostrar directo
+        caseRightRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
+        return;
+      }
+
+      // Cancelar timeouts previos
+      pixelTimeouts.current.forEach(clearTimeout);
+      pixelTimeouts.current = [];
+
+      const pixels = Array.from(grid.children) as HTMLElement[];
+      // Orden aleatorio para show y hide
+      const showOrder = [...pixels].sort(() => Math.random() - 0.5);
+      const hideOrder = [...pixels].sort(() => Math.random() - 0.5);
+
+      // 1. Mostrar pixels aleatoriamente
+      showOrder.forEach((px, i) => {
+        const t = setTimeout(() => { px.style.opacity = "1"; }, i * STEP_MS);
+        pixelTimeouts.current.push(t);
+      });
+
+      // 2. Al completarse los pixels, cambiar el panel
+      const mid = setTimeout(() => {
+        caseRightRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
+      }, 280);
+      pixelTimeouts.current.push(mid);
+
+      // 3. Esconder pixels aleatoriamente
+      hideOrder.forEach((px, i) => {
+        const t = setTimeout(() => { px.style.opacity = "0"; }, 280 + i * STEP_MS);
+        pixelTimeouts.current.push(t);
+      });
     };
 
     const setCardPos = (left: number, top: number, width: number, height: number, radius: number, opacity: number, _unused?: boolean) => {
@@ -193,7 +248,7 @@ export default function Capabilities() {
 
       // Before
       if (scrolled <= 0) {
-        gallery.style.transform = "none";
+        gallery.style.transform = "translateY(100%)";
         gallery.style.paddingTop = `${headerH * 2}px`;
         header.style.height = ""; header.style.opacity = "";
         if (orangeBg) orangeBg.style.opacity = "0";
@@ -203,7 +258,7 @@ export default function Capabilities() {
         applyCharScatter(chars1Ref.current, scatter1.current, 0, false);
         applyCharScatter(chars2Ref.current, scatter2.current, 0, false);
 
-      // Phase 1: scatter + collapse header; paddingTop del gallery sigue al header
+      // Phase 1: scatter + collapse header; gallery empieza a moverse en la 2da mitad
       } else if (scrolled <= phase1Px) {
         const t         = scrolled / phase1Px;
         const scatterT  = Math.min(1, t / 0.45);
@@ -212,7 +267,9 @@ export default function Capabilities() {
         applyCharScatter(chars2Ref.current, scatter2.current, scatterT, false);
         const collapseT = Math.max(0, Math.min(1, (t - 0.35) / 0.65));
         const eased     = easeInCubic(collapseT);
-        gallery.style.transform = "none";
+        // Gallery sube verticalmente mientras el texto scatter
+        const slideUp = easeOutQuart(t);
+        gallery.style.transform  = `translateY(${(1 - slideUp) * 100}%)`;
         gallery.style.paddingTop = `${headerH * 2 * (1 - eased)}px`;
         header.style.height  = `${headerH * (1 - eased)}px`;
         header.style.opacity = String(1 - eased);
@@ -220,7 +277,7 @@ export default function Capabilities() {
         setCardPos(xCasesLeft, cardT, cardW, cardH, 14, 0, false);
         casesCard.style.pointerEvents = "none";
 
-      // Phase 2: gallery slide → Cases card tracks gallery position
+      // Phase 2: gallery scrollea horizontalmente
       } else if (scrolled <= phase3Start) {
         const t  = phase2Px > 0 ? (scrolled - phase1Px) / phase2Px : 1;
         const tx = phase2TxEnd * t;
@@ -233,18 +290,20 @@ export default function Capabilities() {
         applyCharScatter(chars2Ref.current, scatter2.current, 0, true);
         if (orangeBg) orangeBg.style.opacity = String(Math.min(1, t / 0.15));
 
-        // Card tracks gallery: its screen left = xCasesLeft + tx
+        // Card tracks gallery usando el mismo tx
         const screenLeft = xCasesLeft + tx;
         const entryT     = Math.max(0, Math.min(1, (screenLeft - vw * 0.95) / -(vw * 0.3)));
         setCardPos(screenLeft, cardT, cardW, cardH, 14, entryT, false);
         casesCard.style.pointerEvents = "none";
 
-      // Phase 3a: scroll-driven expansion from card → fullscreen
+      // Phase 3a: gallery sigue saliendo de cuadro + Cases card se expande
       } else if (scrolled <= phase3aEnd) {
         const t = (scrolled - phase3Start) / phase3aPx;
         const e = easeOutQuart(t);
 
-        gallery.style.transform = `translateX(${phase2TxEnd}px)`;
+        // Gallery sigue slideeando para sacar las cap cards de pantalla
+        const extraSlide = cardL; // cardL = distancia que falta para que cap3 salga por la izquierda
+        gallery.style.transform = `translateX(${phase2TxEnd - extraSlide * e}px)`;
         gallery.style.paddingTop = "0px";
         if (orangeBg) orangeBg.style.opacity = "1";
 
@@ -259,7 +318,7 @@ export default function Capabilities() {
 
       // Phase 3b+: fullscreen, wait then switch cases
       } else {
-        gallery.style.transform = `translateX(${phase2TxEnd}px)`;
+        gallery.style.transform = `translateX(${phase2TxEnd - cardL}px)`;
         gallery.style.paddingTop = "0px";
         if (orangeBg) orangeBg.style.opacity = "1";
         setCardPos(0, 0, vw, vh, 0, 1, false);
@@ -317,10 +376,10 @@ export default function Capabilities() {
 
         {/* Header */}
         <div ref={headerRef} style={{ overflow: "visible", padding: "9rem 4rem 3rem", textAlign: "center", position: "relative", zIndex: 1 }}>
-          <span style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(237,232,223,0.35)", fontSize: "0.72rem", letterSpacing: "0.1em", display: "inline-block" }}>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.35)", fontSize: "0.72rem", letterSpacing: "0.1em", display: "inline-block" }}>
             {renderChars(LINE0, chars0Ref)}
           </span>
-          <h2 style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(2.8rem, 5vw, 4.5rem)", color: "#EDE8DF", fontWeight: 300, marginTop: "0.5rem", lineHeight: 1.1, perspective: "1000px", perspectiveOrigin: "50% 50%" }}>
+          <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(2.8rem, 5vw, 4.5rem)", color: "#EDE8DF", fontWeight: 300, marginTop: "0.5rem", lineHeight: 1.1, perspective: "1000px", perspectiveOrigin: "50% 50%" }}>
             <span style={{ display: "block", transformStyle: "preserve-3d" }}>{renderChars(LINE1, chars1Ref)}</span>
             <span style={{ display: "block", color: "rgba(237,232,223,0.35)", fontStyle: "italic", transformStyle: "preserve-3d" }}>{renderChars(LINE2, chars2Ref)}</span>
           </h2>
@@ -333,17 +392,17 @@ export default function Capabilities() {
               <div key={i} data-gallery-card="" style={{ flexShrink: 0, aspectRatio: "16 / 10", height: `${CARD_H_VH}vh`, overflow: "hidden", position: "relative", borderRadius: "14px" }}>
                 <div ref={(el) => { if (el) bgRefs.current[i] = el; }} style={{ position: "absolute", top: 0, left: "-12.5%", width: "125%", height: "100%", background: cap.bg, willChange: "transform" }}>
                   <div style={{ position: "absolute", inset: 0, background: cap.noise }} />
-                  <div style={{ position: "absolute", bottom: "-0.05em", right: "-0.02em", fontSize: "clamp(8rem, 20vw, 18rem)", fontFamily: "'Tilt Warp', sans-serif", color: "rgba(255,255,255,0.04)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>{cap.number}</div>
+                  <div style={{ position: "absolute", bottom: "-0.05em", right: "-0.02em", fontSize: "clamp(8rem, 20vw, 18rem)", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.04)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>{cap.number}</div>
                 </div>
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "1.6rem 2rem", background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, transparent 28%, rgba(0,0,0,0.72) 100%)" }}>
-                  <span style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(237,232,223,0.28)", fontSize: "0.65rem", letterSpacing: "0.14em" }}>{cap.number}</span>
+                  <span style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.28)", fontSize: "0.65rem", letterSpacing: "0.14em" }}>{cap.number}</span>
                   <div>
-                    <h3 style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(1.3rem, 2.2vw, 2rem)", color: "#EDE8DF", fontWeight: 300, lineHeight: 1.2, marginBottom: "0.45rem" }}>{cap.title}</h3>
-                    <p style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(237,232,223,0.52)", fontSize: "0.82rem", lineHeight: 1.55, marginBottom: "0.6rem", maxWidth: "36ch" }}>{cap.tagline}</p>
-                    <p style={{ fontFamily: "'Tilt Warp', sans-serif", color: "rgba(237,232,223,0.3)", fontSize: "0.7rem", lineHeight: 1.4, marginBottom: "0.75rem", fontStyle: "italic" }}>{cap.avoid}</p>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.3rem, 2.2vw, 2rem)", color: "#EDE8DF", fontWeight: 700, lineHeight: 1.2, marginBottom: "0.45rem" }}>{cap.title}</h3>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.52)", fontSize: "0.82rem", lineHeight: 1.55, marginBottom: "0.6rem", maxWidth: "36ch" }}>{cap.tagline}</p>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.3)", fontSize: "0.7rem", lineHeight: 1.4, marginBottom: "0.75rem", fontStyle: "italic" }}>{cap.avoid}</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
                       {cap.tags.map((tag) => (
-                        <span key={tag} style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.62rem", padding: "0.2rem 0.55rem", borderRadius: "999px", background: "rgba(237,232,223,0.07)", color: "rgba(237,232,223,0.36)", border: "1px solid rgba(237,232,223,0.09)" }}>{tag}</span>
+                        <span key={tag} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.62rem", padding: "0.2rem 0.55rem", borderRadius: "999px", background: "rgba(237,232,223,0.07)", color: "rgba(237,232,223,0.36)", border: "1px solid rgba(237,232,223,0.09)" }}>{tag}</span>
                       ))}
                     </div>
                   </div>
@@ -362,14 +421,13 @@ export default function Capabilities() {
           style={{ position: "absolute", overflow: "hidden", zIndex: 3, display: "flex", opacity: 0, pointerEvents: "none" }}
         >
           {/* Left panel */}
-          <div ref={casesLeftRef} style={{ width: "36%", height: "100%", flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "4rem 3rem 3.5rem", background: cases[0].leftBg, borderRight: "1px solid rgba(255,255,255,0.05)", position: "relative", overflow: "hidden", boxSizing: "border-box" }}>
-            <div style={{ position: "absolute", inset: 0, backgroundImage: NOISE, backgroundRepeat: "repeat", backgroundSize: "180px 180px", opacity: 0.06, pointerEvents: "none" }} />
+          <div ref={casesLeftRef} style={{ width: "36%", height: "100%", flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "4rem 3rem 3.5rem", position: "relative", overflow: "hidden", boxSizing: "border-box" }}>
             <div style={{ position: "relative" }}>
-              <span style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.65rem", letterSpacing: "0.12em", color: "rgba(255,255,255,0.25)" }}>(Casos)</span>
-              <h2 style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(1.4rem, 2.5vw, 2.8rem)", color: "rgba(255,255,255,0.9)", fontWeight: 300, lineHeight: 1.15, marginTop: "1rem", marginBottom: "1rem" }}>
+              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.12em", color: "rgba(255,255,255,0.25)" }}>(Casos)</span>
+              <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.4rem, 2.5vw, 2.8rem)", color: "rgba(255,255,255,0.9)", fontWeight: 300, lineHeight: 1.15, marginTop: "1rem", marginBottom: "1rem" }}>
                 Sin portfolio<br /><em style={{ color: "rgba(255,255,255,0.4)" }}>pasivo.</em>
               </h2>
-              <p style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(0.65rem, 1vw, 0.8rem)", color: "rgba(255,255,255,0.35)", lineHeight: 1.65, maxWidth: "26ch" }}>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(0.65rem, 1vw, 0.8rem)", color: "rgba(255,255,255,0.35)", lineHeight: 1.65, maxWidth: "26ch" }}>
                 Contexto, problema, decisión y resultado real.
               </p>
             </div>
@@ -382,40 +440,47 @@ export default function Capabilities() {
                     <div style={{ position: "absolute", inset: 0, backgroundImage: NOISE, backgroundSize: "80px 80px", opacity: 0.1 }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div ref={(el) => { caseTabNameRefs.current[i] = el; }} style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(0.7rem, 1.1vw, 0.82rem)", color: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)", transition: "color 0.4s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.client}</div>
-                    <div style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.6rem", color: "rgba(255,255,255,0.2)", marginTop: "0.2rem" }}>{c.tag}</div>
+                    <div ref={(el) => { caseTabNameRefs.current[i] = el; }} style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(0.7rem, 1.1vw, 0.82rem)", color: i === 0 ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)", transition: "color 0.4s", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.client}</div>
+                    <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", color: "rgba(255,255,255,0.2)", marginTop: "0.2rem" }}>{c.tag}</div>
                   </div>
                   <div ref={(el) => { caseTabDotRefs.current[i] = el; }} style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(255,255,255,0.6)", flexShrink: 0, opacity: i === 0 ? 1 : 0, transition: "opacity 0.4s" }} />
                 </div>
               ))}
             </div>
             <div style={{ position: "relative" }}>
-              <div style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.72rem", letterSpacing: "0.09em", background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "0.75rem 1.6rem", display: "inline-block", cursor: "pointer" }}>VER TODOS</div>
-              <p style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.58rem", color: "rgba(255,255,255,0.2)", marginTop: "0.85rem", lineHeight: 1.5 }}>Los nombres son confidenciales por acuerdo.</p>
+              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.09em", background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "0.75rem 1.6rem", display: "inline-block", cursor: "pointer" }}>VER TODOS</div>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.58rem", color: "rgba(255,255,255,0.2)", marginTop: "0.85rem", lineHeight: 1.5 }}>Los nombres son confidenciales por acuerdo.</p>
             </div>
           </div>
 
           {/* Right panels */}
-          <div style={{ flex: 1, height: "100%", position: "relative", overflow: "hidden" }}>
+          <div style={{ flex: 1, height: "100%", position: "relative", overflow: "hidden", borderRadius: "16px" }}>
             {cases.map((c, i) => (
               <div key={i} ref={(el) => { caseRightRefs.current[i] = el; }}
-                style={{ position: "absolute", inset: 0, opacity: i === 0 ? 1 : 0, transition: "opacity 0.6s cubic-bezier(0.16,1,0.3,1)" }}>
-                <div style={{ position: "absolute", inset: 0, background: c.panelBg }} />
-                <div style={{ position: "absolute", inset: 0, backgroundImage: NOISE, backgroundRepeat: "repeat", backgroundSize: "180px 180px", opacity: 0.08, mixBlendMode: "overlay" }} />
-                <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 65% 45%, transparent 35%, rgba(0,0,0,0.45) 100%)" }} />
-                <div style={{ position: "absolute", top: "50%", right: "5%", transform: "translateY(-50%)", fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(8rem, 20vw, 18rem)", color: "rgba(255,255,255,0.03)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>0{i + 1}</div>
+                style={{ position: "absolute", inset: 0, opacity: i === 0 ? 1 : 0 }}>
+                {/* Video (solo caso con video definido) */}
+                {"video" in c && c.video && (
+                  <video
+                    src={c.video as string}
+                    autoPlay loop muted playsInline
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                )}
+                <div style={{ position: "absolute", top: "50%", right: "5%", transform: "translateY(-50%)", fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(8rem, 20vw, 18rem)", color: "rgba(255,255,255,0.03)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>0{i + 1}</div>
                 <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "2.5rem 3rem", background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.4rem" }}>
-                    <span style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.6rem", letterSpacing: "0.14em", color: "rgba(255,255,255,0.25)" }}>{c.year}</span>
-                    <span style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.58rem", letterSpacing: "0.1em", padding: "0.3rem 0.85rem", borderRadius: "999px", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>[{c.tag.toUpperCase()}]</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", letterSpacing: "0.14em", color: "rgba(255,255,255,0.25)" }}>{c.year}</span>
+                    <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.58rem", letterSpacing: "0.1em", padding: "0.3rem 0.85rem", borderRadius: "999px", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>[{c.tag.toUpperCase()}]</span>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "2rem" }}>
-                    <h3 style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "clamp(1.8rem, 3vw, 2.6rem)", color: "rgba(255,255,255,0.92)", fontWeight: 300, lineHeight: 1.1, margin: 0 }}>{c.client}</h3>
-                    <p style={{ fontFamily: "'Tilt Warp', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.55, maxWidth: "32ch", textAlign: "right", margin: 0, flexShrink: 0 }}>{c.result}</p>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.8rem, 3vw, 2.6rem)", color: "rgba(255,255,255,0.92)", fontWeight: 300, lineHeight: 1.1, margin: 0 }}>{c.client}</h3>
+                    <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.78rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.55, maxWidth: "32ch", textAlign: "right", margin: 0, flexShrink: 0 }}>{c.result}</p>
                   </div>
                 </div>
               </div>
             ))}
+            {/* Pixel grid overlay para transición entre casos */}
+            <div ref={pixelGridRef} style={{ position: "absolute", inset: 0, zIndex: 10, pointerEvents: "none" }} />
           </div>
         </div>
 
