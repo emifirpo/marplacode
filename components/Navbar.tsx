@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import CTAButton from "./CTAButton";
 
 // ─── Logo SVG inline ────────────────────────────────────────────────────────
 function LogoIcon() {
@@ -25,57 +26,6 @@ const E  = "cubic-bezier(0.16, 1, 0.3, 1)";
 // Curva para expansiones de layout — spring suave con micro-overshoot
 const EX = "cubic-bezier(0.34, 1.15, 0.64, 1)";
 
-// ─── CTA Button ──────────────────────────────────────────────────────────────
-function CTAButton({ onHoverChange }: { onHoverChange: (v: boolean) => void }) {
-  const [hov, setHov] = useState(false);
-
-  return (
-    <a
-      href="#contacto"
-      onMouseEnter={() => { setHov(true);  onHoverChange(true);  }}
-      onMouseLeave={() => { setHov(false); onHoverChange(false); }}
-      style={{
-        display:         "inline-flex",
-        alignItems:      "center",
-        justifyContent:  "center",
-        height:          "42px",
-        borderRadius:    "999px",
-        background:      hov ? "#c92c18" : "#E8341E",
-        color:           "#fff",
-        fontSize:        "0.875rem",
-        fontWeight:      500,
-        textDecoration:  "none",
-        overflow:        "hidden",
-        padding:         "0 18px 0 22px",
-        flex:            "1",        // siempre crece para llenar espacio disponible
-        minWidth:        "140px",    // mínimo de seguridad
-        transition:      "background 0.25s",
-        fontFamily:      "'DM Sans', sans-serif",
-        whiteSpace:      "nowrap",
-      }}
-    >
-      <span style={{ display: "flex", flexDirection: "column", height: "1.15em", overflow: "hidden" }}>
-        <span style={{
-          lineHeight:  1.15,
-          transition:  `transform 0.38s ${E}`,
-          transform:   hov ? "translateY(-100%)" : "translateY(0%)",
-        }}>
-          Iniciar proyecto
-        </span>
-        <span style={{
-          lineHeight:  1.15,
-          transition:  `transform 0.38s ${E}`,
-          transform:   hov ? "translateY(-100%)" : "translateY(0%)",
-          display:     "flex",
-          alignItems:  "center",
-          gap:         "5px",
-        }}>
-          Iniciar proyecto <span style={{ fontSize: "0.85em", opacity: 0.85 }}>→</span>
-        </span>
-      </span>
-    </a>
-  );
-}
 
 // ─── Menu Button ─────────────────────────────────────────────────────────────
 function MenuBtn({ open, onClick }: { open: boolean; onClick: () => void }) {
@@ -355,7 +305,7 @@ export default function Navbar() {
             <MenuBtn open={open} onClick={() => setOpen(v => !v)} />
           </div>
 
-          <CTAButton onHoverChange={setCtaHov} />
+          <CTAButton onHoverChange={setCtaHov} flex="1" minWidth={140} />
         </div>
       </nav>
     </>

@@ -137,7 +137,12 @@ export default function Filter() {
       }} />
 
       {/* ── Heading ────────────────────────────────────────────────────────── */}
-      <div style={{ textAlign: "center", position: "relative", zIndex: 10 }}>
+      <div style={{
+        textAlign:    "center",
+        position:     "relative",
+        zIndex:       10,
+        mixBlendMode: "difference",
+      }}>
         <span style={{
           fontFamily:    "'DM Sans', sans-serif",
           fontSize:      "0.72rem",
@@ -153,7 +158,6 @@ export default function Filter() {
           lineHeight:   1.1,
           marginTop:    "1rem",
           marginBottom: 0,
-          mixBlendMode: "difference",
         }}>
           <span style={{ display: "block", overflow: "hidden" }}>
             <span ref={(el) => { headingRefs.current[0] = el; }} style={{ display: "block" }}>

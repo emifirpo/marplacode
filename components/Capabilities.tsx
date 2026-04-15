@@ -1,31 +1,34 @@
 "use client";
 
 import { useEffect, useRef, MutableRefObject } from "react";
+import WavyLines from "./WavyLines";
+import CTAButton from "./CTAButton";
 
+// Variantes oscuras de #C8784A (H≈22°, S≈60%) — entre L 8% y 14%, sin llegar a negro
 const capabilities = [
   {
     number: "01", title: "Product Thinking",
     tagline: "Definimos qué construir — y qué no.",
     avoid: "Evita gastar meses construyendo lo incorrecto.",
     tags: ["Discovery", "UX Research", "Roadmap"],
-    bg: "linear-gradient(145deg, #0f0f0f 0%, #181818 45%, #222 75%, #111 100%)",
-    noise: "radial-gradient(ellipse at 30% 70%, rgba(255,255,255,0.03) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.02) 0%, transparent 50%)",
+    bg: "linear-gradient(145deg, #1a0c06 0%, #211009 45%, #271409 75%, #1c0e07 100%)",
+    noise: "radial-gradient(ellipse at 30% 70%, rgba(200,120,74,0.06) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(200,120,74,0.04) 0%, transparent 50%)",
   },
   {
     number: "02", title: "Design that Converts",
     tagline: "Interfaces que guían decisiones, no que se ven lindas.",
     avoid: "Evita rediseñar cada 6 meses porque 'no convierte'.",
     tags: ["UX/UI", "Design Systems", "Prototyping"],
-    bg: "linear-gradient(145deg, #1a0400 0%, #2d0b04 35%, #c42d15 75%, #E8341E 100%)",
-    noise: "radial-gradient(ellipse at 20% 80%, rgba(255,100,50,0.12) 0%, transparent 60%), radial-gradient(ellipse at 85% 15%, rgba(255,60,20,0.08) 0%, transparent 50%)",
+    bg: "linear-gradient(145deg, #1e0e07 0%, #28130a 35%, #301609 75%, #251109 100%)",
+    noise: "radial-gradient(ellipse at 20% 80%, rgba(200,120,74,0.08) 0%, transparent 60%), radial-gradient(ellipse at 85% 15%, rgba(200,120,74,0.05) 0%, transparent 50%)",
   },
   {
     number: "03", title: "Engineering Ready to Scale",
     tagline: "Tecnología que aguanta el crecimiento.",
     avoid: "Evita refactorings costosos cuando lleguen los usuarios.",
     tags: ["Next.js", "React", "TypeScript", "Node.js"],
-    bg: "linear-gradient(145deg, #060c14 0%, #0c1825 40%, #112235 70%, #0a1520 100%)",
-    noise: "radial-gradient(ellipse at 25% 75%, rgba(56,130,220,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(30,90,180,0.06) 0%, transparent 50%)",
+    bg: "linear-gradient(145deg, #1c0d07 0%, #231109 40%, #2b1509 70%, #1e0e07 100%)",
+    noise: "radial-gradient(ellipse at 25% 75%, rgba(200,120,74,0.05) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(200,120,74,0.04) 0%, transparent 50%)",
   },
 ];
 
@@ -223,7 +226,38 @@ export default function Capabilities() {
       // Reset card to its starting position (off-screen right)
       setCardPos(xCasesLeft, cardT, cardW, cardH, 14, 0, false);
       casesCard.style.pointerEvents = "none";
+
+      // Click + hover en tabs
+      caseTabRefs.current.forEach((tab, i) => {
+        if (!tab) return;
+        tab.style.cursor = "pointer";
+        tab.onmouseenter = () => {
+          if (activeCase !== i) tab.style.backgroundColor = "rgba(255,255,255,0.04)";
+        };
+        tab.onmouseleave = () => {
+          if (activeCase !== i) tab.style.backgroundColor = "transparent";
+        };
+        tab.onclick = () => {
+          const target = outerTop + phase1Px + phase2Px + phase3aPx + waitPx + i * window.innerHeight;
+          window.scrollTo({ top: target, behavior: "smooth" });
+        };
+      });
     };
+
+    // ── Color de fondo scroll-driven ─────────────────────────────────────────
+    const BG_DARK   = [13,  13,  13 ];  // #0D0D0D
+    const BG_ORANGE = [200, 120, 74 ];  // #C8784A
+    const BG_CASE   = [26,  12,   6 ];  // #1a0c06
+    const lerpBg = (from: number[], to: number[], t: number) => {
+      if (!sticky) return;
+      const e = Math.max(0, Math.min(1, t));
+      const r = Math.round(from[0] + (to[0] - from[0]) * e);
+      const g = Math.round(from[1] + (to[1] - from[1]) * e);
+      const b = Math.round(from[2] + (to[2] - from[2]) * e);
+      sticky.style.background = `rgb(${r},${g},${b})`;
+    };
+    const setBg     = (t: number) => lerpBg(BG_DARK,   BG_ORANGE, t);
+    const setCaseBg = (t: number) => lerpBg(BG_ORANGE, BG_CASE,   t);
 
     const applyCharScatter = (els: (HTMLElement | null)[], scatters: { x: number; y: number }[], progress: number, hide: boolean) => {
       const e = power4(progress);
@@ -257,6 +291,7 @@ export default function Capabilities() {
         applyCharScatter(chars0Ref.current, scatter0.current, 0, false);
         applyCharScatter(chars1Ref.current, scatter1.current, 0, false);
         applyCharScatter(chars2Ref.current, scatter2.current, 0, false);
+        setBg(0);
 
       // Phase 1: scatter + collapse header; gallery empieza a moverse en la 2da mitad
       } else if (scrolled <= phase1Px) {
@@ -276,6 +311,7 @@ export default function Capabilities() {
         if (orangeBg) orangeBg.style.opacity = "0";
         setCardPos(xCasesLeft, cardT, cardW, cardH, 14, 0, false);
         casesCard.style.pointerEvents = "none";
+        setBg(easeInCubic(t));
 
       // Phase 2: gallery scrollea horizontalmente
       } else if (scrolled <= phase3Start) {
@@ -295,6 +331,7 @@ export default function Capabilities() {
         const entryT     = Math.max(0, Math.min(1, (screenLeft - vw * 0.95) / -(vw * 0.3)));
         setCardPos(screenLeft, cardT, cardW, cardH, 14, entryT, false);
         casesCard.style.pointerEvents = "none";
+        setBg(1);
 
       // Phase 3a: gallery sigue saliendo de cuadro + Cases card se expande
       } else if (scrolled <= phase3aEnd) {
@@ -305,7 +342,7 @@ export default function Capabilities() {
         const extraSlide = cardL; // cardL = distancia que falta para que cap3 salga por la izquierda
         gallery.style.transform = `translateX(${phase2TxEnd - extraSlide * e}px)`;
         gallery.style.paddingTop = "0px";
-        if (orangeBg) orangeBg.style.opacity = "1";
+        if (orangeBg) orangeBg.style.opacity = String(1 - e);
 
         const left   = cardL + (0   - cardL)  * e;
         const top    = cardT + (0   - cardT)   * e;
@@ -315,14 +352,16 @@ export default function Capabilities() {
         setCardPos(left, top, width, height, radius, 1, false);
         casesCard.style.pointerEvents = e > 0.95 ? "auto" : "none";
         showCase(0);
+        setCaseBg(e);
 
       // Phase 3b+: fullscreen, wait then switch cases
       } else {
         gallery.style.transform = `translateX(${phase2TxEnd - cardL}px)`;
         gallery.style.paddingTop = "0px";
-        if (orangeBg) orangeBg.style.opacity = "1";
+        if (orangeBg) orangeBg.style.opacity = "0";
         setCardPos(0, 0, vw, vh, 0, 1, false);
         casesCard.style.pointerEvents = "auto";
+        setCaseBg(1);
 
         const raw = Math.max(0, scrolled - phase3aEnd - waitPx);
         showCase(Math.min(cases.length - 1, Math.floor(raw / vh)));
@@ -370,8 +409,9 @@ export default function Capabilities() {
 
         {/* Orange bg */}
         <div ref={orangeBgRef} style={{ position: "absolute", inset: 0, opacity: 0, pointerEvents: "none", zIndex: 0 }}>
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #1a0900 0%, #2d1100 40%, #1f0a00 70%, #150700 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, #a85e30 0%, #c8784a 40%, #b86838 70%, #a05530 100%)" }} />
           <div style={{ position: "absolute", inset: 0, backgroundImage: NOISE, backgroundRepeat: "repeat", backgroundSize: "180px 180px", opacity: 0.09, mixBlendMode: "overlay" }} />
+          <WavyLines color="rgba(255,255,255,0.10)" xGap={10} yGap={32} />
         </div>
 
         {/* Header */}
@@ -397,7 +437,7 @@ export default function Capabilities() {
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "1.6rem 2rem", background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, transparent 28%, rgba(0,0,0,0.72) 100%)" }}>
                   <span style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.28)", fontSize: "0.65rem", letterSpacing: "0.14em" }}>{cap.number}</span>
                   <div>
-                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.3rem, 2.2vw, 2rem)", color: "#EDE8DF", fontWeight: 700, lineHeight: 1.2, marginBottom: "0.45rem" }}>{cap.title}</h3>
+                    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(2rem, 3.8vw, 3.8rem)", color: "#EDE8DF", fontWeight: 500, lineHeight: 1.05, marginBottom: "0.55rem", letterSpacing: "-0.02em" }}>{cap.title}</h3>
                     <p style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.52)", fontSize: "0.82rem", lineHeight: 1.55, marginBottom: "0.6rem", maxWidth: "36ch" }}>{cap.tagline}</p>
                     <p style={{ fontFamily: "'DM Sans', sans-serif", color: "rgba(237,232,223,0.3)", fontSize: "0.7rem", lineHeight: 1.4, marginBottom: "0.75rem", fontStyle: "italic" }}>{cap.avoid}</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
@@ -425,7 +465,7 @@ export default function Capabilities() {
             <div style={{ position: "relative" }}>
               <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.12em", color: "rgba(255,255,255,0.25)" }}>(Casos)</span>
               <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.4rem, 2.5vw, 2.8rem)", color: "rgba(255,255,255,0.9)", fontWeight: 300, lineHeight: 1.15, marginTop: "1rem", marginBottom: "1rem" }}>
-                Sin portfolio<br /><em style={{ color: "rgba(255,255,255,0.4)" }}>pasivo.</em>
+                Selected<br /><em style={{ color: "rgba(255,255,255,0.4)" }}>works.</em>
               </h2>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(0.65rem, 1vw, 0.8rem)", color: "rgba(255,255,255,0.35)", lineHeight: 1.65, maxWidth: "26ch" }}>
                 Contexto, problema, decisión y resultado real.
@@ -448,7 +488,7 @@ export default function Capabilities() {
               ))}
             </div>
             <div style={{ position: "relative" }}>
-              <div style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.72rem", letterSpacing: "0.09em", background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: "999px", padding: "0.75rem 1.6rem", display: "inline-block", cursor: "pointer" }}>VER TODOS</div>
+              <CTAButton label="Ver todos" href="#casos" height={42} minWidth={120} />
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.58rem", color: "rgba(255,255,255,0.2)", marginTop: "0.85rem", lineHeight: 1.5 }}>Los nombres son confidenciales por acuerdo.</p>
             </div>
           </div>

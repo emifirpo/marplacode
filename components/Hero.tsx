@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
-import CursorTrail from "./CursorTrail";
-import DitherBg from "./DitherBg";
-import WavyLines from "./WavyLines";
+import dynamic from "next/dynamic";
+import animationData from "@/public/logo-animated.json";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+
+// Frames totales del JSON (op: 663)
+const LOTTIE_FRAMES = 663;
 
 // ── DigitReel: columna vertical de dígitos estilo odómetro ───────────────────
-// Usa un "0" invisible como sizer → el ancho siempre es el del dígito más ancho
 function DigitReel({ index, size, visible }: {
   index:   number;
   size:    number;
@@ -21,10 +23,7 @@ function DigitReel({ index, size, visible }: {
       opacity:      visible ? 1 : 0,
       transition:   "opacity 0.35s ease",
     }}>
-      {/* Sizer invisible: marca el ancho real del "0" en esta fuente/peso */}
       <span style={{ visibility: "hidden", display: "block", height: "1em", lineHeight: 1 }}>0</span>
-
-      {/* Reel: posición absoluta sobre el sizer, overflow hidden + mask */}
       <span style={{
         position:        "absolute",
         inset:           0,
@@ -49,27 +48,37 @@ function DigitReel({ index, size, visible }: {
   );
 }
 
-const HEADLINE   = "Diseño como el motor de crecimiento";
+const HEADLINE  = "Diseño como el motor de crecimiento";
+const SUBTITLE  = "Convertimos ideas en productos que escalan — con criterio, velocidad y foco en el negocio.";
 
 const TAGLINE    = "Convertimos ideas en productos que escalan.";
 const DESCRIPTOR = "Partner estratégico para founders y equipos que construyen con criterio.";
 
+// ── easing helpers ───────────────────────────────────────────────────────────
+const easeOutExpo  = (t: number) => t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+const easeInExpo   = (t: number) => t === 0 ? 0 : Math.pow(2, 10 * t - 10);
+
 export default function Hero() {
-  const sectionRef      = useRef<HTMLElement>(null);
-  const containerRef    = useRef<HTMLDivElement>(null);
-  const titleRef        = useRef<HTMLHeadingElement>(null);
-  const measureRef      = useRef<HTMLSpanElement>(null);
-  const taglineRef      = useRef<HTMLSpanElement>(null);
-  const descRef         = useRef<HTMLSpanElement>(null);
+  const sectionRef   = useRef<HTMLElement>(null);
+  const taglineRef   = useRef<HTMLSpanElement>(null);
+  const descRef      = useRef<HTMLSpanElement>(null);
+  const videoRef     = useRef<HTMLVideoElement>(null);
+  const lottieRef       = useRef<any>(null);
+  const lottieWrapRef   = useRef<HTMLDivElement>(null);
+
+  // Word refs — Demo 1 (Codrops TextBlockTransitions)
+  const h1WordsRef  = useRef<HTMLElement[]>([]);
+  const subWordsRef = useRef<HTMLElement[]>([]);
+  const entryTlRef  = useRef<any>(null); // para poder killarlo si el user scrollea rápido
 
   const [count,         setCount]         = useState(0);
   const [loaderFading,  setLoaderFading]  = useState(false);
   const [loaderVisible, setLoaderVisible] = useState(true);
 
-  // ── Estado inicial oculto ─────────────────────────────────────────────────
+  // ── Estado inicial oculto (tagline y descriptor) ──────────────────────────
   useEffect(() => {
-    if (taglineRef.current) gsap.set(taglineRef.current, { yPercent: 115 });
-    if (descRef.current)    gsap.set(descRef.current,    { yPercent: 115 });
+    if (taglineRef.current) taglineRef.current.style.transform = "translateY(115%)";
+    if (descRef.current)    descRef.current.style.transform = "translateY(115%)";
   }, []);
 
   // ── Loader: RAF de 0 → 100 ────────────────────────────────────────────────
@@ -100,52 +109,177 @@ export default function Hero() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // ── Entry animations ──────────────────────────────────────────────────────
+  // ── Entry animations — Demo 1 (Codrops) ──────────────────────────────────
   useEffect(() => {
     if (loaderVisible) return;
 
-    const title   = titleRef.current;
-    const tagline = taglineRef.current;
-    const desc    = descRef.current;
-    if (!title || !tagline || !desc) return;
+    const tagline  = taglineRef.current;
+    const desc     = descRef.current;
+    const h1Words  = h1WordsRef.current.filter(Boolean);
+    const subWords = subWordsRef.current.filter(Boolean);
+    if (!tagline || !desc) return;
 
-    const tl = gsap.timeline();
+    // TODO: Convert GSAP timeline to CSS animations
+    // For now, apply end states directly
+    if (lottieWrapRef.current) {
+      lottieWrapRef.current.style.opacity = "1";
+      lottieWrapRef.current.style.transform = "translateY(0)";
+    }
 
-    tl.fromTo(title,
-      { opacity: 0, y: -70 },
-      { opacity: 1, y: 0, duration: 0.9, ease: "power3.out" }
-    );
-    tl.fromTo(tagline,
-      { yPercent: 115 },
-      { yPercent: 0, duration: 0.75, ease: "power3.out" },
-      "-=0.55"
-    );
-    tl.fromTo(desc,
-      { yPercent: 115 },
-      { yPercent: 0, duration: 0.75, ease: "power3.out" },
-      "-=0.6"
-    );
+    h1Words.forEach(word => {
+      if (word) {
+        word.style.opacity = "1";
+        word.style.transform = "translateY(0) rotate(0)";
+      }
+    });
+
+    subWords.forEach(word => {
+      if (word) {
+        word.style.opacity = "1";
+        word.style.transform = "translateY(0) rotate(0)";
+      }
+    });
+
+    tagline.style.transform = "translateY(0)";
+    desc.style.transform = "translateY(0)";
   }, [loaderVisible]);
 
-  // Fit desactivado — el h1 usa font-size responsivo via CSS clamp
-
-  // ── Fade out al scrollear ─────────────────────────────────────────────────
+  // ── Scroll → Lottie + text exit (Demo 7) + fade-out ─────────────────────
+  // Reparto del scroll vertical:
+  //   0              → LOTTIE_END    : Lottie frame-by-frame
+  //   LOTTIE_END     → TEXT_END      : H1 + subtitle salen hacia arriba (Demo 7 salida)
+  //   TEXT_END       → TEXT_END+FADE : hero se desvanece
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
+    const vh           = window.innerHeight;
+    const LOTTIE_END   = vh * 0.2;   // Lottie completo a los 20vh de scroll
+    const TEXT_RANGE   = vh * 0.35;  // texto sale en 35vh (empieza a los 20vh)
+    const TEXT_END     = LOTTIE_END + TEXT_RANGE;  // 0.55vh
+    const FADE_RANGE   = vh * 0.25;  // fade del hero en 25vh (0.55 → 0.8vh)
+
     const onScroll = () => {
-      const vh    = window.innerHeight;
-      const start = vh * 0.3;
-      const end   = vh * 0.7;
-      const p     = Math.max(0, Math.min(1, (window.scrollY - start) / (end - start)));
-      section.style.opacity = String(1 - p);
+      const sy = window.scrollY;
+
+      // ── 1. Lottie scroll-driven ───────────────────────────────────────
+      const lottie = lottieRef.current;
+      if (lottie) {
+        const p = Math.max(0, Math.min(1, sy / LOTTIE_END));
+        lottie.goToAndStop(p * LOTTIE_FRAMES, true);
+      }
+
+      // ── 2. Texto: salida Demo 1 reversa (scroll-driven) ──────────────
+      const textP = Math.max(0, Math.min(1, (sy - LOTTIE_END) / TEXT_RANGE));
+      if (textP > 0) {
+        const applyExit = (words: HTMLElement[], groupOffset: number) => {
+          const total = words.length;
+          words.forEach((word, i) => {
+            if (!word) return;
+            const center   = (total - 1) / 2;
+            const dist     = Math.abs(i - center) / center;
+            const delay    = groupOffset + dist * 0.15;
+            const localP   = Math.max(0, Math.min(1, (textP - delay) / (1 - delay)));
+            const eased    = easeInExpo(localP);
+
+            const rot = i < total / 2 ? -3 : 3;
+            word.style.opacity = String(1 - eased);
+            word.style.transform = `translateY(${-30 * eased}%) rotate(${rot * eased}deg)`;
+          });
+        };
+
+        applyExit(h1WordsRef.current.filter(Boolean),  0);
+        applyExit(subWordsRef.current.filter(Boolean), 0.05);
+      }
+
+      // ── 3. Fade del hero, comienza cuando el texto terminó ────────────
+      const fadeP = Math.max(0, Math.min(1, (sy - TEXT_END) / FADE_RANGE));
+      section.style.opacity = String(1 - fadeP);
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // ── Scroll → video playback (adelante/atrás) ─────────────────────────────
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.preload = "auto";
+
+    // Tiempo virtual que controlamos manualmente
+    let virtualTime   = 0;
+    let scrollVel     = 0;   // px/s — capturado en el evento scroll
+    let lastScrollY   = window.scrollY;
+    let lastScrollT   = performance.now();
+    let lastRafT      = performance.now();
+    let seeking       = false;
+    let rafId: number;
+
+    // ── Capturar velocidad de scroll en el evento (no en RAF) ────────────
+    const onScroll = () => {
+      const now = performance.now();
+      const dt  = Math.max((now - lastScrollT) / 1000, 0.001);
+      scrollVel = (window.scrollY - lastScrollY) / dt;
+      lastScrollY = window.scrollY;
+      lastScrollT = now;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // ── Cuando termina un seek, permitir el siguiente ────────────────────
+    const onSeeked = () => { seeking = false; };
+    video.addEventListener("seeked", onSeeked);
+
+    const tick = (now: number) => {
+      const dt = Math.max((now - lastRafT) / 1000, 0.001);
+      lastRafT = now;
+
+      // Decay velocity (frame-rate independiente)
+      scrollVel *= Math.pow(0.88, dt * 60);
+
+      // Multiplicador de velocidad según scroll
+      let mult: number;
+      if      (scrollVel < -60)  mult = Math.max(-4, scrollVel / 200);  // reversa
+      else if (scrollVel >  60)  mult = Math.min( 5, 1 + scrollVel / 250); // acelerado
+      else                       mult = 1;                                   // normal
+
+      // Avanzar tiempo virtual
+      if (video.duration) {
+        virtualTime += dt * mult;
+        // Loop limpio
+        if (virtualTime > video.duration) virtualTime -= video.duration;
+        if (virtualTime < 0)              virtualTime += video.duration;
+
+        // Seekar solo si no hay un seek en curso (evita saturar el decoder)
+        if (!seeking && Math.abs(video.currentTime - virtualTime) > 0.04) {
+          seeking = true;
+          video.currentTime = virtualTime;
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    // Esperar a que el video esté listo y arrancar
+    const onReady = () => {
+      virtualTime = 0;
+      rafId = requestAnimationFrame(tick);
+    };
+
+    if (video.readyState >= 1) {
+      onReady();
+    } else {
+      video.addEventListener("loadedmetadata", onReady, { once: true });
+    }
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+      video.removeEventListener("seeked", onSeeked);
+    };
+  }, []);
 
   return (
     <>
@@ -159,7 +293,6 @@ export default function Hero() {
           display:        "flex",
           alignItems:     "flex-end",
           justifyContent: "flex-start",
-          paddingLeft:    0,
           paddingBottom:  "clamp(2rem, 5vh, 4rem)",
           opacity:        loaderFading ? 0 : 1,
           transition:     "opacity 0.6s ease",
@@ -177,12 +310,9 @@ export default function Hero() {
             display:            "flex",
             opacity:            Math.min(count / 20, 1),
           }}>
-            {/* Centenas */}
-            <DigitReel index={Math.floor(count / 100)} size={2}  visible={count >= 100} />
-            {/* Decenas */}
-            <DigitReel index={Math.floor(count / 10)}  size={11} visible={count >= 10}  />
-            {/* Unidades */}
-            <DigitReel index={count}                   size={101} visible={true}        />
+            <DigitReel index={Math.floor(count / 100)} size={2}   visible={count >= 100} />
+            <DigitReel index={Math.floor(count / 10)}  size={11}  visible={count >= 10}  />
+            <DigitReel index={count}                   size={101} visible={true}         />
           </div>
         </div>
       )}
@@ -191,7 +321,7 @@ export default function Hero() {
       <section
         ref={sectionRef}
         style={{
-          background:    "#C8784A",
+          background:    "#0D0D0D",
           minHeight:     "100svh",
           display:       "flex",
           flexDirection: "column",
@@ -200,46 +330,109 @@ export default function Hero() {
           overflow:      "hidden",
         }}
       >
-        <DitherBg />
-        <WavyLines color="rgba(80,30,5,0.12)" />
-        <CursorTrail />
-
-        {/* ── Título centrado ────────────────────────────────────────────── */}
-        <div
-          ref={containerRef}
+        {/* ── Video background ──────────────────────────────────────────── */}
+        <video
+          ref={videoRef}
+          src="/hero-web.mp4"
+          muted
+          playsInline
+          preload="auto"
           style={{
-            flex:           1,
-            width:          "100%",
-            position:       "relative",
-            zIndex:         10,
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            padding:        "0 clamp(2rem, 8vw, 8rem)",
+            position:   "absolute",
+            inset:      0,
+            width:      "100%",
+            height:     "100%",
+            objectFit:  "cover",
+            zIndex:     0,
           }}
-        >
+        />
+        {/* Overlay oscuro para contraste con el texto */}
+        <div style={{
+          position:   "absolute",
+          inset:      0,
+          background: "rgba(0,0,0,0.48)",
+          zIndex:     1,
+        }} />
+
+        {/* ── Título izquierda arriba ────────────────────────────────────── */}
+        <div style={{
+          position:   "relative",
+          zIndex:     10,
+          padding:    "clamp(2rem, 5vw, 4rem)",
+          paddingTop: "clamp(3rem, 7vh, 5rem)",
+        }}>
+          {/* Lottie logo */}
+          <div
+            ref={lottieWrapRef}
+            style={{ width: "clamp(140px, 16vw, 220px)", marginBottom: "clamp(1.5rem, 3vh, 2.5rem)", opacity: 0 }}
+          >
+            <Lottie
+              lottieRef={lottieRef}
+              animationData={animationData}
+              autoplay={false}
+              loop={false}
+              style={{ width: "100%", height: "auto" }}
+            />
+          </div>
+
+          {/* H1 — Demo 1 (Codrops): word spans con opacity 0 inicial, GSAP los anima */}
           <h1
-            ref={titleRef}
             style={{
               fontFamily:    "'DM Sans', sans-serif",
               fontWeight:    500,
-              color:         "#1A0C04",
-              fontSize:      "clamp(3rem, 7.5vw, 8rem)",
-              lineHeight:    0.92,
+              color:         "#FFFFFF",
+              fontSize:      "clamp(2.8rem, 6.5vw, 7rem)",
+              lineHeight:    1.02,
               letterSpacing: "-0.03em",
               whiteSpace:    "normal",
-              textAlign:     "center",
+              textAlign:     "left",
               userSelect:    "none",
               margin:        0,
-              padding:       0,
-              maxWidth:      "18ch",
-              opacity:       0,
+              maxWidth:      "14ch",
             }}
           >
-            <span ref={measureRef} style={{ display: "inline" }}>
-              {HEADLINE}
-            </span>
+            {HEADLINE.split(" ").map((word, i, arr) => (
+              <span
+                key={i}
+                ref={el => { if (el) h1WordsRef.current[i] = el as HTMLElement; }}
+                style={{
+                  display:    "inline-block",
+                  marginRight: i < arr.length - 1 ? "0.28em" : 0,
+                  opacity:    0,
+                  willChange: "transform, opacity",
+                }}
+              >
+                {word}
+              </span>
+            ))}
           </h1>
+
+          {/* Subtítulo — Demo 1 */}
+          <p style={{
+            fontFamily:    "'DM Sans', sans-serif",
+            fontWeight:    400,
+            color:         "rgba(255,255,255,0.65)",
+            fontSize:      "clamp(0.9rem, 1.4vw, 1.15rem)",
+            lineHeight:    1.55,
+            letterSpacing: "-0.01em",
+            margin:        "clamp(1rem, 2.5vh, 1.8rem) 0 0",
+            maxWidth:      "42ch",
+          }}>
+            {SUBTITLE.split(" ").map((word, i, arr) => (
+              <span
+                key={i}
+                ref={el => { if (el) subWordsRef.current[i] = el as HTMLElement; }}
+                style={{
+                  display:    "inline-block",
+                  marginRight: i < arr.length - 1 ? "0.25em" : 0,
+                  opacity:    0,
+                  willChange: "transform, opacity",
+                }}
+              >
+                {word}
+              </span>
+            ))}
+          </p>
         </div>
 
         {/* ── Bottom row ────────────────────────────────────────────────── */}
@@ -254,7 +447,6 @@ export default function Hero() {
             zIndex:         10,
           }}
         >
-          {/* Tagline — demo5 */}
           <div style={{ overflow: "hidden", maxWidth: "clamp(240px, 38vw, 520px)" }}>
             <span
               ref={taglineRef}
@@ -262,7 +454,7 @@ export default function Hero() {
                 display:       "block",
                 fontFamily:    "'DM Sans', sans-serif",
                 fontSize:      "clamp(0.95rem, 1.8vw, 1.4rem)",
-                color:         "#111111",
+                color:         "#EDE8DF",
                 fontWeight:    600,
                 letterSpacing: "-0.015em",
                 lineHeight:    1.2,
@@ -272,7 +464,6 @@ export default function Hero() {
             </span>
           </div>
 
-          {/* Descriptor — demo5 */}
           <div style={{ overflow: "hidden", maxWidth: "clamp(160px, 18vw, 240px)" }}>
             <span
               ref={descRef}
@@ -280,7 +471,7 @@ export default function Hero() {
                 display:       "block",
                 fontFamily:    "'DM Sans', sans-serif",
                 fontSize:      "clamp(0.6rem, 0.85vw, 0.8rem)",
-                color:         "rgba(17,17,17,0.4)",
+                color:         "rgba(237,232,223,0.4)",
                 fontWeight:    400,
                 textAlign:     "right",
                 lineHeight:    1.55,
