@@ -11,6 +11,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function SmoothScroll() {
   useEffect(() => {
+    // Lenis smooth scroll sólo en desktop — en touch el scroll nativo es más fluido
+    // y GSAP ticker a 60fps es demasiado pesado para mobile
+    if ("ontouchstart" in window || navigator.maxTouchPoints > 0) return;
+
     const lenis = new Lenis({
       duration:  1.2,
       easing:    (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

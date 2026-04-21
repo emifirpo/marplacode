@@ -48,3 +48,25 @@ em {
   font-style: italic;
 }
 
+/* ── Inputs transparentes (CTA, modales) ───────────────────────────────────── */
+.input-bare {
+  background:       transparent !important;
+  background-color: transparent !important;
+}
+.input-bare:-webkit-autofill,
+.input-bare:-webkit-autofill:hover,
+.input-bare:-webkit-autofill:focus,
+.input-bare:-webkit-autofill:active {
+  -webkit-box-shadow:      0 0 0 1000px #0D0D0D inset !important;
+  -webkit-text-fill-color: #EDE8DF !important;
+  transition:              background-color 5000s ease-in-out 0s;
+}
+
+/* Modal: fondo ligeramente distinto */
+.modal-dark .input-bare:-webkit-autofill,
+.modal-dark .input-bare:-webkit-autofill:hover,
+.modal-dark .input-bare:-webkit-autofill:focus {
+  -webkit-box-shadow:      0 0 0 1000px #111 inset !important;
+  -webkit-text-fill-color: #EDE8DF !important;
+}
+

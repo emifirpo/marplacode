@@ -9,6 +9,7 @@ interface CTAButtonProps {
   href?:           string;
   onClick?:        () => void;
   onHoverChange?:  (v: boolean) => void;
+  type?:           "button" | "submit" | "reset";
   /** Altura del botón. Default: 42px */
   height?:         number;
   /** Padding horizontal. Default: "0 18px 0 22px" */
@@ -25,6 +26,7 @@ export default function CTAButton({
   href          = "#contacto",
   onClick,
   onHoverChange,
+  type,
   height        = 42,
   padding       = "0 18px 0 22px",
   minWidth      = 140,
@@ -82,9 +84,10 @@ export default function CTAButton({
     </span>
   );
 
-  if (onClick) {
+  if (onClick || type) {
     return (
       <button
+        type={type ?? "button"}
         onClick={onClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}

@@ -4,7 +4,6 @@ import Hero from "@/components/Hero";
 import Filter from "@/components/Filter";
 import Capabilities from "@/components/Capabilities";
 import Process from "@/components/Process";
-import Differentiator from "@/components/Differentiator";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import ContentWrapper from "@/components/ContentWrapper";
@@ -23,7 +22,6 @@ export default function Home() {
           <Capabilities />
         </div>
         <Process />
-        <Differentiator />
         <CTA />
         <Footer />
       </div>

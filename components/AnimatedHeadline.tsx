@@ -16,23 +16,32 @@ export default function AnimatedHeadline({ children, className = "", style }: Pr
     if (!wrap) return;
 
     const words = wrap.querySelectorAll<HTMLElement>("[data-word]");
+
+    // Set initial hidden state
     words.forEach((word, i) => {
       word.style.opacity    = "0";
       word.style.transform  = "translateY(0.6em)";
       word.style.transition = `opacity 0.7s ease ${i * 0.09}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${i * 0.09}s`;
     });
 
-    // Trigger on next frame so initial hidden state paints
-    const raf = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        words.forEach((word) => {
-          word.style.opacity   = "1";
-          word.style.transform = "translateY(0)";
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          requestAnimationFrame(() => {
+            words.forEach((word) => {
+              word.style.opacity   = "1";
+              word.style.transform = "translateY(0)";
+            });
+          });
+          observer.disconnect();
         });
-      });
-    });
+      },
+      { threshold: 0.25 }
+    );
 
-    return () => cancelAnimationFrame(raf);
+    observer.observe(wrap);
+    return () => observer.disconnect();
   }, []);
 
   // Convert children string lines into word spans

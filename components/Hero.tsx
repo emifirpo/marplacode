@@ -202,10 +202,13 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── Scroll → video playback (adelante/atrás) ─────────────────────────────
+  // ── Scroll → video playback (adelante/atrás) — solo desktop ─────────────
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    // En mobile (touch) dejamos autoplay+loop, sin seeking por scroll
+    if ("ontouchstart" in window || navigator.maxTouchPoints > 0) return;
 
     video.preload = "auto";
 
@@ -336,6 +339,8 @@ export default function Hero() {
           src="/hero-web.mp4"
           muted
           playsInline
+          autoPlay
+          loop
           preload="auto"
           style={{
             position:   "absolute",

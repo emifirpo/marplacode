@@ -1,304 +1,348 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import WavyLines  from "./WavyLines";
+import CTAButton  from "./CTAButton";
 
-export default function CTA() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-    budget: "",
-  });
-  const [sent, setSent] = useState(false);
+// ─── Underline field ──────────────────────────────────────────────────────────
+function LineField({
+  label, type = "text", value, onChange, placeholder, required = false, multiline = false,
+}: {
+  label: string; type?: string; value: string;
+  onChange: (v: string) => void; placeholder?: string;
+  required?: boolean; multiline?: boolean;
+}) {
+  const [active, setActive] = useState(false);
+  const shared: React.CSSProperties = {
+    display:"block", width:"100%", background:"transparent",
+    border:"none", outline:"none", color:"#EDE8DF",
+    fontFamily:"'DM Sans', sans-serif", fontSize:"0.95rem",
+    fontWeight:300, padding:"6px 0 12px", resize:"none",
+    caretColor:"#EDE8DF", lineHeight:1.6,
+    // prevent browser fill
+    WebkitTextFillColor:"#EDE8DF",
+  };
+  return (
+    <div style={{ position:"relative", paddingBottom:"2px" }}>
+      <label style={{
+        fontFamily:"'DM Sans', sans-serif", fontSize:"0.6rem",
+        letterSpacing:"0.14em", textTransform:"uppercase" as const,
+        color: active ? "rgba(237,232,223,0.55)" : "rgba(237,232,223,0.25)",
+        display:"block", marginBottom:"8px", transition:"color 0.3s",
+      }}>{label}</label>
+      {multiline
+        ? <textarea rows={3} required={required} value={value} placeholder={placeholder}
+            className="input-bare"
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setActive(true)} onBlur={() => setActive(false)}
+            style={{ ...shared, minHeight:"72px" }} />
+        : <input type={type} required={required} value={value} placeholder={placeholder}
+            className="input-bare"
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setActive(true)} onBlur={() => setActive(false)}
+            style={shared} />
+      }
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"1px", background:"rgba(237,232,223,0.1)" }} />
+      <div style={{
+        position:"absolute", bottom:0, left:0, right:0, height:"1px",
+        background:"#EDE8DF", transformOrigin:"left center",
+        transform: active ? "scaleX(1)" : "scaleX(0)",
+        transition:"transform 0.45s cubic-bezier(0.16,1,0.3,1)",
+      }} />
+    </div>
+  );
+}
 
+// ─── Modal ────────────────────────────────────────────────────────────────────
+// visible lo controla el padre para evitar race conditions con la animación de salida
+function Modal({ email, visible, onClose, onSent }: {
+  email:string; visible:boolean; onClose:()=>void; onSent:()=>void;
+}) {
+  const [data, setData] = useState({ name:"", budget:"", message:"" });
   const budgets = ["< $5k", "$5k – $15k", "$15k – $30k", "$30k+"];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSent(true);
-  };
+  useEffect(() => {
+    if (visible) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [visible]);
 
   return (
-    <section
-      id="contacto"
-      className="py-32 px-6"
-      style={{ background: "#0D0D0D" }}
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position:"fixed", inset:0, zIndex:1000,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        background:"rgba(13,13,13,0.82)",
+        backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)",
+        opacity: visible ? 1 : 0,
+        pointerEvents: visible ? "auto" : "none",
+        transition:"opacity 0.32s ease",
+        padding:"1.5rem",
+      }}
     >
-      <div className="max-w-5xl mx-auto">
-        {/* Section label */}
-        <span
-          className="text-xs tracking-wide"
-          style={{
-            fontFamily: "'DM Sans', sans-serif",
-            color: "rgba(237,232,223,0.4)",
-          }}
+      <div
+        className="modal-dark"
+        style={{
+          width:"100%", maxWidth:"460px",
+          background:"#111",
+          border:"1px solid rgba(237,232,223,0.07)",
+          borderRadius:"4px",
+          padding:"2.5rem",
+          position:"relative",
+          transform: visible ? "translateY(0)" : "translateY(20px)",
+          transition:"transform 0.38s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        {/* Close */}
+        <button onClick={onClose} style={{
+          position:"absolute", top:"1.2rem", right:"1.2rem",
+          background:"none", border:"none", cursor:"pointer",
+          color:"rgba(237,232,223,0.25)", fontSize:"1rem", lineHeight:1, padding:"4px",
+          transition:"color 0.2s",
+        }}
+          onMouseEnter={(e) => (e.currentTarget.style.color="#EDE8DF")}
+          onMouseLeave={(e) => (e.currentTarget.style.color="rgba(237,232,223,0.25)")}
+        >✕</button>
+
+        <p style={{
+          fontFamily:"'DM Sans', sans-serif", fontSize:"0.7rem",
+          color:"rgba(237,232,223,0.3)", marginBottom:"2rem",
+          letterSpacing:"0.03em",
+        }}>
+          Respondemos a{" "}<span style={{ color:"#EDE8DF" }}>{email}</span>
+        </p>
+
+        <form
+          onSubmit={(e) => { e.preventDefault(); onSent(); }}
+          style={{ display:"flex", flexDirection:"column", gap:"1.8rem" }}
         >
-          (Contacto)
-        </span>
+          <LineField label="Tu nombre" required value={data.name}
+            onChange={(v) => setData({ ...data, name:v })}
+            placeholder="Nombre o empresa" />
 
-        <div className="mt-4 grid md:grid-cols-2 gap-16 items-start">
-          {/* Left */}
           <div>
-            <h2
-              className="font-light leading-[0.95] mb-8"
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                fontSize: "clamp(3rem, 7vw, 6rem)",
-                color: "#EDE8DF",
-              }}
-            >
-              Contanos qué
-              <br />
-              <em>estás</em>
-              <br />
-              construyendo.
-            </h2>
-            <p
-              className="text-sm leading-relaxed mb-12"
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-                color: "rgba(237,232,223,0.45)",
-                maxWidth: "300px",
-              }}
-            >
-              Evaluamos si tiene sentido trabajar juntos. Sin compromiso.
-              Respondemos en menos de 24h.
-            </p>
-
-            {/* Contact alternatives */}
-            <div className="space-y-4">
-              <a
-                href="mailto:hello@marplacode.com"
-                className="flex items-center gap-3 transition-colors group"
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  color: "rgba(237,232,223,0.45)",
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#EDE8DF")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,232,223,0.45)")}
-              >
-                <span
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs"
+            <label style={{
+              fontFamily:"'DM Sans', sans-serif", fontSize:"0.6rem",
+              letterSpacing:"0.14em", textTransform:"uppercase" as const,
+              color:"rgba(237,232,223,0.25)", display:"block", marginBottom:"12px",
+            }}>Presupuesto estimado</label>
+            <div style={{ display:"flex", flexWrap:"wrap" as const, gap:"8px" }}>
+              {budgets.map(b => (
+                <button key={b} type="button" onClick={() => setData({ ...data, budget:b })}
                   style={{
-                    background: "rgba(237,232,223,0.05)",
-                    border: "1px solid rgba(237,232,223,0.08)",
+                    fontFamily:"'DM Sans', sans-serif", fontSize:"0.75rem",
+                    padding:"5px 14px", borderRadius:"999px", cursor:"pointer",
+                    background: data.budget===b ? "#E8341E" : "transparent",
+                    color:      data.budget===b ? "#fff"    : "rgba(237,232,223,0.35)",
+                    border:     data.budget===b ? "1px solid #E8341E" : "1px solid rgba(237,232,223,0.1)",
+                    transition:"all 0.2s ease",
                   }}
-                >
-                  @
-                </span>
-                <span className="text-sm">hello@marplacode.com</span>
-              </a>
-              <a
-                href="https://wa.me/5492235000000"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 transition-colors"
-                style={{
-                  fontFamily: "'DM Sans', sans-serif",
-                  color: "rgba(237,232,223,0.45)",
-                  textDecoration: "none",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#EDE8DF")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(237,232,223,0.45)")}
-              >
-                <span
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-xs"
-                  style={{
-                    background: "rgba(237,232,223,0.05)",
-                    border: "1px solid rgba(237,232,223,0.08)",
-                  }}
-                >
-                  ↗
-                </span>
-                <span className="text-sm">WhatsApp directo</span>
-              </a>
+                >{b}</button>
+              ))}
             </div>
           </div>
 
-          {/* Right: Form */}
-          <div>
-            {sent ? (
-              <div
-                className="p-10 text-center rounded-2xl"
-                style={{
-                  background: "rgba(232,52,30,0.06)",
-                  border: "1px solid rgba(232,52,30,0.15)",
-                }}
-              >
-                <div
-                  className="text-4xl mb-4"
-                  style={{ color: "#E8341E" }}
-                >
-                  ✓
-                </div>
-                <h3
-                  className="text-xl mb-2"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    color: "#EDE8DF",
-                  }}
-                >
-                  Mensaje recibido
-                </h3>
-                <p
-                  className="text-sm"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    color: "rgba(237,232,223,0.5)",
-                  }}
-                >
-                  Te respondemos en menos de 24h.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name */}
-                <div>
-                  <label
-                    className="text-xs tracking-widest uppercase block mb-2"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "rgba(237,232,223,0.3)",
-                    }}
-                  >
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Tu nombre o el de tu empresa"
-                    className="w-full px-5 py-4 text-sm outline-none transition-all"
-                    style={{
-                      background: "rgba(237,232,223,0.04)",
-                      border: "1px solid rgba(237,232,223,0.08)",
-                      borderRadius: "12px",
-                      color: "#EDE8DF",
-                      fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  />
-                </div>
+          <LineField label="¿Qué estás construyendo?" required multiline
+            value={data.message} onChange={(v) => setData({ ...data, message:v })}
+            placeholder="Contexto, problema, qué querés lograr..." />
 
-                {/* Email */}
-                <div>
-                  <label
-                    className="text-xs tracking-widest uppercase block mb-2"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "rgba(237,232,223,0.3)",
-                    }}
-                  >
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="hola@tuempresa.com"
-                    className="w-full px-5 py-4 text-sm outline-none transition-all"
-                    style={{
-                      background: "rgba(237,232,237,0.04)",
-                      border: "1px solid rgba(237,232,223,0.08)",
-                      borderRadius: "12px",
-                      color: "#EDE8DF",
-                      fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  />
-                </div>
+          <CTAButton label="Enviar mensaje" type="submit" />
+        </form>
+      </div>
+    </div>
+  );
+}
 
-                {/* Budget */}
-                <div>
-                  <label
-                    className="text-xs tracking-widest uppercase block mb-3"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "rgba(237,232,223,0.3)",
-                    }}
-                  >
-                    Presupuesto estimado
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {budgets.map((b) => (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, budget: b })}
-                        className="px-4 py-2 rounded-full text-sm transition-all"
-                        style={{
-                          fontFamily: "'DM Sans', sans-serif",
-                          background: formData.budget === b ? "#E8341E" : "transparent",
-                          color: formData.budget === b ? "#fff" : "rgba(237,232,223,0.4)",
-                          border: formData.budget === b
-                            ? "1px solid #E8341E"
-                            : "1px solid rgba(237,232,223,0.1)",
-                        }}
-                      >
-                        {b}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+// ─── Email input con micro-interacción ───────────────────────────────────────
+function EmailInput({ value, onChange }: { value:string; onChange:(v:string)=>void }) {
+  const [active, setActive] = useState(false);
+  return (
+    <div style={{ position:"relative", paddingBottom:"2px", width:"100%", maxWidth:"360px" }}>
+      <input
+        type="email"
+        required
+        className="input-bare"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setActive(true)}
+        onBlur={() => setActive(false)}
+        placeholder="tu@email.com"
+        autoComplete="email"
+        style={{
+          display:"block", width:"100%",
+          background:"transparent",
+          border:"none", outline:"none",
+          textAlign:"center",
+          color:"#EDE8DF",
+          fontFamily:"'DM Sans', sans-serif",
+          fontSize:"clamp(1rem, 2vw, 1.2rem)",
+          fontWeight:300,
+          padding:"6px 0 14px",
+          caretColor:"#EDE8DF",
+          WebkitTextFillColor:"#EDE8DF",
+          letterSpacing:"0.01em",
+        }}
+      />
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"1px", background:"rgba(237,232,223,0.1)" }} />
+      <div style={{
+        position:"absolute", bottom:0, left:0, right:0, height:"1px",
+        background:"#EDE8DF", transformOrigin:"left center",
+        transform: active ? "scaleX(1)" : "scaleX(0)",
+        transition:"transform 0.45s cubic-bezier(0.16,1,0.3,1)",
+      }} />
+    </div>
+  );
+}
 
-                {/* Message */}
-                <div>
-                  <label
-                    className="text-xs tracking-widest uppercase block mb-2"
-                    style={{
-                      fontFamily: "'DM Sans', sans-serif",
-                      color: "rgba(237,232,223,0.3)",
-                    }}
-                  >
-                    ¿Qué estás construyendo? *
-                  </label>
-                  <textarea
-                    required
-                    rows={4}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Contanos el contexto: qué tiene hoy, qué problema tiene, qué querés lograr..."
-                    className="w-full px-5 py-4 text-sm outline-none resize-none"
-                    style={{
-                      background: "rgba(237,232,223,0.04)",
-                      border: "1px solid rgba(237,232,223,0.08)",
-                      borderRadius: "12px",
-                      color: "#EDE8DF",
-                      fontFamily: "'DM Sans', sans-serif",
-                    }}
-                  />
-                </div>
+// ─── Main ─────────────────────────────────────────────────────────────────────
+export default function CTA() {
+  const [email, setEmail]       = useState("");
+  const [showModal, setModal]   = useState(false);
+  const [sent,  setSent]        = useState(false);
 
-                {/* Submit */}
-                <button
-                  type="submit"
-                  className="w-full py-4 rounded-full text-sm font-medium transition-colors"
-                  style={{
-                    background: "#E8341E",
-                    color: "#fff",
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#C82D19")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#E8341E")}
-                >
-                  Enviar mensaje →
-                </button>
+  // ── h2 scroll-reveal (word by word) ─────────────────────────────────────
+  const h2Ref    = useRef<HTMLHeadingElement>(null);
+  const wordsRef = useRef<HTMLElement[]>([]);
 
-                <p
-                  className="text-xs text-center"
-                  style={{
-                    fontFamily: "'DM Sans', sans-serif",
-                    color: "rgba(237,232,223,0.2)",
-                  }}
-                >
-                  No spam. No cold sales. Solo respondemos si tiene sentido trabajar juntos.
-                </p>
-              </form>
-            )}
+  useEffect(() => {
+    const h2 = h2Ref.current;
+    if (!h2) return;
+    const words = Array.from(h2.querySelectorAll<HTMLElement>("[data-w]"));
+    wordsRef.current = words;
+    words.forEach((w, i) => {
+      w.style.opacity   = "0";
+      w.style.transform = "translateY(0.55em)";
+      w.style.transition = `opacity 0.7s ease ${i * 0.1}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${i * 0.1}s`;
+    });
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      requestAnimationFrame(() => {
+        words.forEach(w => { w.style.opacity="1"; w.style.transform="translateY(0)"; });
+      });
+      obs.disconnect();
+    }, { threshold: 0.2 });
+    obs.observe(h2);
+    return () => obs.disconnect();
+  }, []);
+
+  const openModal = () => {
+    if (!email) return;
+    setModal(true);
+  };
+
+  const handleContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    openModal();
+  };
+
+  // Helper: wrap each word in a span
+  const wordSpan = (text: string, startIdx: number) =>
+    text.split(" ").map((w, i) => (
+      <span
+        key={startIdx + i}
+        data-w=""
+        style={{ display:"inline-block", marginRight:"0.25em", willChange:"transform, opacity" }}
+      >{w}</span>
+    ));
+
+  return (
+    <>
+      <section
+        id="contacto"
+        style={{
+          position:"relative",
+          background:"#0D0D0D",
+          minHeight:"100vh",
+          display:"flex",
+          flexDirection:"column",
+          alignItems:"center",
+          justifyContent:"center",
+          padding:"8rem 1.5rem",
+          overflow:"hidden",
+          textAlign:"center",
+        }}
+      >
+        {/* WavyLines bg — 30% */}
+        <div style={{ position:"absolute", inset:0, opacity:0.3, pointerEvents:"none" }}>
+          <WavyLines color="rgba(237,232,223,0.4)" xGap={10} yGap={32} />
+        </div>
+
+        <div style={{ position:"relative", width:"100%", maxWidth:"820px" }}>
+
+          {/* Label */}
+          <span style={{
+            fontFamily:"'DM Sans', sans-serif", fontSize:"0.68rem",
+            letterSpacing:"0.1em", color:"rgba(237,232,223,0.35)",
+            display:"block", marginBottom:"2rem",
+          }}>(Contacto)</span>
+
+          {/* H2 — scroll reveal */}
+          <h2
+            ref={h2Ref}
+            style={{
+              fontFamily:"'DM Sans', sans-serif",
+              fontSize:"clamp(2.8rem, 6.5vw, 5.5rem)",
+              fontWeight:300,
+              lineHeight:1.0,
+              color:"#EDE8DF",
+              margin:"0 0 3.5rem",
+              letterSpacing:"-0.01em",
+              overflow:"visible",
+            }}
+          >
+            <span style={{ display:"block" }}>
+              {wordSpan("Contanos qué estás", 0)}
+            </span>
+            <span style={{ display:"block", fontStyle:"italic" }}>
+              {wordSpan("construyendo.", 4)}
+            </span>
+          </h2>
+
+          {/* Email + button */}
+          {!sent ? (
+            <form onSubmit={handleContinue} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"2rem" }}>
+              <EmailInput value={email} onChange={setEmail} />
+              <CTAButton label="Continuar" type="submit" />
+            </form>
+          ) : (
+            <div>
+              <p style={{
+                fontFamily:"'DM Sans', sans-serif", fontSize:"1.1rem",
+                fontWeight:300, color:"rgba(237,232,223,0.55)", marginBottom:"0.5rem",
+              }}>Mensaje recibido.</p>
+              <p style={{
+                fontFamily:"'DM Sans', sans-serif", fontSize:"0.85rem",
+                color:"rgba(237,232,223,0.3)",
+              }}>Te respondemos en menos de 24h.</p>
+            </div>
+          )}
+
+          {/* Footer email */}
+          <div style={{ marginTop:"5rem" }}>
+            <a href="mailto:hello@marplacode.com" style={{
+              fontFamily:"'DM Sans', sans-serif", fontSize:"0.72rem",
+              color:"rgba(237,232,223,0.22)", textDecoration:"none",
+              letterSpacing:"0.05em", transition:"color 0.2s",
+            }}
+              onMouseEnter={(e) => (e.currentTarget.style.color="rgba(237,232,223,0.6)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color="rgba(237,232,223,0.22)")}
+            >
+              hello@marplacode.com
+            </a>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <Modal
+        email={email}
+        visible={showModal}
+        onClose={() => setModal(false)}
+        onSent={() => { setModal(false); setSent(true); }}
+      />
+    </>
   );
 }

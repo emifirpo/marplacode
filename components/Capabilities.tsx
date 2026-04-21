@@ -73,13 +73,21 @@ export default function Capabilities() {
   // Cases card — position:absolute in sticky, tracks gallery in Phase 2
   const casesCardRef     = useRef<HTMLDivElement>(null);
   const casesLeftRef     = useRef<HTMLDivElement>(null);
+  const casesRightRef    = useRef<HTMLDivElement>(null);
+  const spacerRef        = useRef<HTMLDivElement>(null);
   const caseRightRefs    = useRef<(HTMLDivElement | null)[]>([]);
   const caseTabRefs      = useRef<(HTMLDivElement | null)[]>([]);
   const caseTabNameRefs  = useRef<(HTMLDivElement | null)[]>([]);
   const caseTabThumbRefs = useRef<(HTMLDivElement | null)[]>([]);
   const caseTabDotRefs   = useRef<(HTMLDivElement | null)[]>([]);
-  const pixelGridRef     = useRef<HTMLDivElement>(null);
-  const pixelTimeouts    = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Mobile nav bar
+  const mobileNavBarRef    = useRef<HTMLDivElement>(null);
+  const mobileCaseTitleRef = useRef<HTMLHeadingElement>(null);
+  const mobileCaseTagRef   = useRef<HTMLSpanElement>(null);
+  const mobilePrevRef      = useRef<HTMLButtonElement>(null);
+  const mobileNextRef      = useRef<HTMLButtonElement>(null);
+  const mobileDotRefs      = useRef<(HTMLSpanElement | null)[]>([]);
 
   const chars0Ref = useRef<(HTMLElement | null)[]>([]);
   const chars1Ref = useRef<(HTMLElement | null)[]>([]);
@@ -96,19 +104,7 @@ export default function Capabilities() {
     scatter1.current = make(LINE1.length);
     scatter2.current = make(LINE2.length);
 
-    // Inicializar pixel grid (7×7 = 49 píxeles)
-    const grid = pixelGridRef.current;
-    if (grid) {
-      const G = 7, pct = 100 / G;
-      for (let r = 0; r < G; r++) {
-        for (let c = 0; c < G; c++) {
-          const px = document.createElement("div");
-          px.style.cssText = `position:absolute;width:${pct}%;height:${pct}%;left:${c*pct}%;top:${r*pct}%;background:rgba(13,13,13,0.97);opacity:0;transition:opacity 0s;`;
-          grid.appendChild(px);
-        }
-      }
-    }
-    return () => { pixelTimeouts.current.forEach(clearTimeout); };
+    return () => {};
   }, []);
 
   useEffect(() => {
@@ -127,6 +123,7 @@ export default function Capabilities() {
 
     let phase1Px = 0, phase2Px = 0, phase3aPx = 0, waitPx = 0, casePx = 0;
     let phase2TxEnd = 0, headerH = 0, outerTop = 0, rafId = 0, prevScrolled = -9999, activeCase = -1;
+    let isMobileMode = false;
     // card bounds at Phase 2 end (px in sticky container)
     let cardL = 0, cardT = 0, cardW = 0, cardH = 0;
     // gallery X position of cases card (before translate)
@@ -139,48 +136,25 @@ export default function Capabilities() {
       caseTabDotRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
     };
 
-    const GRID_SIZE = 7;
-    const TOTAL_PX  = GRID_SIZE * GRID_SIZE;
-    const STEP_MS   = 280 / TOTAL_PX;
-
     const showCase = (idx: number) => {
       if (idx === activeCase) return;
       const from = activeCase;
       activeCase = idx; // marca inmediatamente para evitar re-triggers
       applyTabState(idx);
 
-      const grid = pixelGridRef.current;
-      if (!grid || from === -1) {
-        // Primera vez: sin transición, mostrar directo
-        caseRightRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
-        return;
-      }
-
-      // Cancelar timeouts previos
-      pixelTimeouts.current.forEach(clearTimeout);
-      pixelTimeouts.current = [];
-
-      const pixels = Array.from(grid.children) as HTMLElement[];
-      // Orden aleatorio para show y hide
-      const showOrder = [...pixels].sort(() => Math.random() - 0.5);
-      const hideOrder = [...pixels].sort(() => Math.random() - 0.5);
-
-      // 1. Mostrar pixels aleatoriamente
-      showOrder.forEach((px, i) => {
-        const t = setTimeout(() => { px.style.opacity = "1"; }, i * STEP_MS);
-        pixelTimeouts.current.push(t);
+      // Update mobile nav bar
+      if (mobileCaseTitleRef.current) mobileCaseTitleRef.current.textContent = cases[idx].client;
+      if (mobileCaseTagRef.current)   mobileCaseTagRef.current.textContent   = `[${cases[idx].tag.toUpperCase()}]`;
+      mobileDotRefs.current.forEach((dot, i) => {
+        if (dot) dot.style.background = i === idx ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.2)";
       });
+      if (mobilePrevRef.current) mobilePrevRef.current.style.opacity = idx === 0 ? "0.3" : "1";
+      if (mobileNextRef.current) mobileNextRef.current.style.opacity = idx === cases.length - 1 ? "0.3" : "1";
 
-      // 2. Al completarse los pixels, cambiar el panel
-      const mid = setTimeout(() => {
-        caseRightRefs.current.forEach((el, i) => { if (el) el.style.opacity = i === idx ? "1" : "0"; });
-      }, 280);
-      pixelTimeouts.current.push(mid);
-
-      // 3. Esconder pixels aleatoriamente
-      hideOrder.forEach((px, i) => {
-        const t = setTimeout(() => { px.style.opacity = "0"; }, 280 + i * STEP_MS);
-        pixelTimeouts.current.push(t);
+      caseRightRefs.current.forEach((el, i) => {
+        if (!el) return;
+        el.style.transition = "opacity 0.35s ease";
+        el.style.opacity = i === idx ? "1" : "0";
       });
     };
 
@@ -199,13 +173,26 @@ export default function Capabilities() {
       const vw = window.innerWidth, vh = window.innerHeight;
       headerH = header.offsetHeight;
 
-      const capCardH   = Math.round(vh * CARD_H_VH / 100);
-      const capCardW   = Math.round(capCardH * 1.6);
-      const casesCardW = Math.round(vw * CASES_W_RATIO);
+      const isMobile = vw < 768;
+      const padPx    = isMobile ? 16 : PAD;
+      const gapPx    = isMobile ? 12 : GAP;
 
-      xCasesLeft   = PAD + capabilities.length * (capCardW + GAP);
+      // Update container gap and padding to match JS calculations
+      container.style.paddingLeft  = `${padPx}px`;
+      container.style.paddingRight = `${padPx}px`;
+      container.style.gap          = `${gapPx}px`;
+
+      const capCardH   = Math.round(Math.min(vh * CARD_H_VH / 100, vw * 0.78 * 1.25));
+      const capCardW   = Math.round(Math.min(vh * CARD_H_VH / 100 * 1.6, vw * 0.78));
+      // On mobile, cases card = same width as cap cards (appears right after last card)
+      const casesCardW = isMobile ? capCardW : Math.round(vw * CASES_W_RATIO);
+
+      // Update spacer width to match casesCardW
+      if (spacerRef.current) spacerRef.current.style.width = `${casesCardW}px`;
+
+      xCasesLeft   = padPx + capabilities.length * (capCardW + gapPx);
       const xCasesRight = xCasesLeft + casesCardW;
-      phase2TxEnd  = -(xCasesRight - vw + PAD);
+      phase2TxEnd  = -(xCasesRight - vw + padPx);
       phase2Px     = Math.max(0, -phase2TxEnd);
 
       cardW = casesCardW;
@@ -213,10 +200,26 @@ export default function Capabilities() {
       cardT = (vh - cardH) / 2;
       cardL = xCasesLeft + phase2TxEnd; // screen position at end of Phase 2
 
-      phase3aPx = vh * 0.7; // scroll-driven expansion travel
+      phase3aPx = isMobile ? vh * 0.5 : vh * 0.7;
       waitPx    = vh * 0.4;
-      casePx    = cases.length * vh;
-      phase1Px  = vh * 0.8;
+      // On mobile, case switching is via tap buttons — no extra scroll needed
+      casePx    = isMobile ? 0 : cases.length * vh;
+      phase1Px  = isMobile ? vh * 0.35 : vh * 0.8;
+      isMobileMode = isMobile;
+
+      // Mobile: video fills the whole card, nav bar overlays at bottom
+      if (casesLeft)             casesLeft.style.display             = isMobile ? "none" : "";
+      if (casesRightRef.current) {
+        casesRightRef.current.style.height       = isMobile ? "100%" : "";
+        casesRightRef.current.style.borderRadius = isMobile ? "0"    : "";
+      }
+      if (mobileNavBarRef.current) mobileNavBarRef.current.style.display = isMobile ? "flex" : "none";
+      if (isMobile && mobilePrevRef.current) {
+        mobilePrevRef.current.onclick = () => showCase(Math.max(0, activeCase - 1));
+      }
+      if (isMobile && mobileNextRef.current) {
+        mobileNextRef.current.onclick = () => showCase(Math.min(cases.length - 1, activeCase + 1));
+      }
 
       outer.style.height = `calc(100vh + ${phase1Px + phase2Px + phase3aPx + waitPx + casePx}px)`;
       outerTop     = outer.getBoundingClientRect().top + window.scrollY;
@@ -345,9 +348,12 @@ export default function Capabilities() {
         if (orangeBg) orangeBg.style.opacity = String(1 - e);
 
         const left   = cardL + (0   - cardL)  * e;
-        const top    = cardT + (0   - cardT)   * e;
         const width  = cardW + (vw  - cardW)   * e;
         const height = cardH + (vh  - cardH)   * e;
+        // top fijo en cardT (igual que las cap cards) durante el 90% de la expansión;
+        // solo baja a 0 en el último 10% para evitar el salto al entrar en phase 3b
+        const topT   = Math.max(0, (e - 0.9) / 0.1);
+        const top    = cardT * (1 - topT);
         const radius = 14   * (1 - e);
         setCardPos(left, top, width, height, radius, 1, false);
         casesCard.style.pointerEvents = e > 0.95 ? "auto" : "none";
@@ -363,8 +369,10 @@ export default function Capabilities() {
         casesCard.style.pointerEvents = "auto";
         setCaseBg(1);
 
-        const raw = Math.max(0, scrolled - phase3aEnd - waitPx);
-        showCase(Math.min(cases.length - 1, Math.floor(raw / vh)));
+        if (!isMobileMode) {
+          const raw = Math.max(0, scrolled - phase3aEnd - waitPx);
+          showCase(Math.min(cases.length - 1, Math.floor(raw / vh)));
+        }
       }
 
       // Parallax per cap bg
@@ -429,7 +437,7 @@ export default function Capabilities() {
         <div ref={galleryRef} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", zIndex: 1, willChange: "transform" }}>
           <div ref={containerRef} style={{ display: "flex", gap: "1.5rem", paddingLeft: "4rem", paddingRight: "4rem", alignItems: "center", flexShrink: 0 }}>
             {capabilities.map((cap, i) => (
-              <div key={i} data-gallery-card="" style={{ flexShrink: 0, aspectRatio: "16 / 10", height: `${CARD_H_VH}vh`, overflow: "hidden", position: "relative", borderRadius: "14px" }}>
+              <div key={i} data-gallery-card="" style={{ flexShrink: 0, width: `min(${CARD_H_VH * 1.6}vh, 78vw)`, height: `min(${CARD_H_VH}vh, ${78 * 1.25}vw)`, overflow: "hidden", position: "relative", borderRadius: "14px" }}>
                 <div ref={(el) => { if (el) bgRefs.current[i] = el; }} style={{ position: "absolute", top: 0, left: "-12.5%", width: "125%", height: "100%", background: cap.bg, willChange: "transform" }}>
                   <div style={{ position: "absolute", inset: 0, background: cap.noise }} />
                   <div style={{ position: "absolute", bottom: "-0.05em", right: "-0.02em", fontSize: "clamp(8rem, 20vw, 18rem)", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.04)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>{cap.number}</div>
@@ -449,8 +457,8 @@ export default function Capabilities() {
                 </div>
               </div>
             ))}
-            {/* Spacer: keeps scrollWidth correct for phase2 calculation */}
-            <div style={{ flexShrink: 0, width: `${CASES_W_RATIO * 100}vw` }} />
+            {/* Spacer: keeps scrollWidth correct for phase2 calculation — width set dynamically in setup() */}
+            <div ref={spacerRef} style={{ flexShrink: 0, width: `${CASES_W_RATIO * 100}vw` }} />
             <div style={{ flexShrink: 0, width: "4rem" }} />
           </div>
         </div>
@@ -494,7 +502,7 @@ export default function Capabilities() {
           </div>
 
           {/* Right panels */}
-          <div style={{ flex: 1, height: "100%", position: "relative", overflow: "hidden", borderRadius: "16px" }}>
+          <div ref={casesRightRef} style={{ flex: 1, height: "100%", position: "relative", overflow: "hidden", borderRadius: "16px" }}>
             {cases.map((c, i) => (
               <div key={i} ref={(el) => { caseRightRefs.current[i] = el; }}
                 style={{ position: "absolute", inset: 0, opacity: i === 0 ? 1 : 0 }}>
@@ -519,8 +527,62 @@ export default function Capabilities() {
                 </div>
               </div>
             ))}
-            {/* Pixel grid overlay para transición entre casos */}
-            <div ref={pixelGridRef} style={{ position: "absolute", inset: 0, zIndex: 10, pointerEvents: "none" }} />
+          </div>
+
+          {/* ── Mobile nav bar: video header + title + prev/next (hidden on desktop) ── */}
+          <div
+            ref={mobileNavBarRef}
+            style={{
+              display:       "none", // setup() lo activa en mobile
+              position:      "absolute",
+              bottom:        0,
+              left:          0,
+              right:         0,
+              zIndex:        5,
+              flexDirection: "column",
+              gap:           "0.55rem",
+              padding:       "4rem 1.4rem 5.8rem",
+              background:    "linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.82) 35%, rgba(0,0,0,0.45) 65%, transparent 100%)",
+              pointerEvents: "none",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+              <div>
+                <h3
+                  ref={mobileCaseTitleRef}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "clamp(1.9rem, 7.5vw, 2.6rem)", color: "rgba(255,255,255,0.92)", fontWeight: 300, lineHeight: 1.05, margin: 0 }}
+                >
+                  {cases[0].client}
+                </h3>
+                <span
+                  ref={mobileCaseTagRef}
+                  style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.58rem", letterSpacing: "0.1em", padding: "0.22rem 0.65rem", borderRadius: "999px", background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)", display: "inline-block", marginTop: "0.45rem" }}
+                >
+                  [{cases[0].tag.toUpperCase()}]
+                </span>
+              </div>
+              {/* Prev / Next */}
+              <div style={{ display: "flex", gap: "0.45rem", pointerEvents: "auto" }}>
+                <button
+                  ref={mobilePrevRef}
+                  style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "1.15rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity 0.3s", opacity: 0.3 }}
+                >←</button>
+                <button
+                  ref={mobileNextRef}
+                  style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "1.15rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity 0.3s" }}
+                >→</button>
+              </div>
+            </div>
+            {/* Dots */}
+            <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+              {cases.map((_, i) => (
+                <span
+                  key={i}
+                  ref={el => { mobileDotRefs.current[i] = el; }}
+                  style={{ width: 6, height: 6, borderRadius: "50%", background: i === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.2)", transition: "background 0.3s", display: "inline-block" }}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
