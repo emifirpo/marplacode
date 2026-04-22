@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import animationData from "@/public/logo-animated.json";
 
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -74,6 +73,11 @@ export default function Hero() {
   const [count,         setCount]         = useState(0);
   const [loaderFading,  setLoaderFading]  = useState(false);
   const [loaderVisible, setLoaderVisible] = useState(true);
+  const [animationData, setAnimationData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch("/logo-animated.json").then(r => r.json()).then(setAnimationData);
+  }, []);
 
   // ── Estado inicial oculto (tagline y descriptor) ──────────────────────────
   useEffect(() => {
@@ -341,7 +345,7 @@ export default function Hero() {
           playsInline
           autoPlay
           loop
-          preload="auto"
+          preload="metadata"
           style={{
             position:   "absolute",
             inset:      0,
@@ -371,13 +375,15 @@ export default function Hero() {
             ref={lottieWrapRef}
             style={{ width: "clamp(140px, 16vw, 220px)", marginBottom: "clamp(1.5rem, 3vh, 2.5rem)", opacity: 0 }}
           >
-            <Lottie
-              lottieRef={lottieRef}
-              animationData={animationData}
-              autoplay={false}
-              loop={false}
-              style={{ width: "100%", height: "auto" }}
-            />
+            {animationData && (
+              <Lottie
+                lottieRef={lottieRef}
+                animationData={animationData}
+                autoplay={false}
+                loop={false}
+                style={{ width: "100%", height: "auto" }}
+              />
+            )}
           </div>
 
           {/* H1 — Demo 1 (Codrops): word spans con opacity 0 inicial, GSAP los anima */}
